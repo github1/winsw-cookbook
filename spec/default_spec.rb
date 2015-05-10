@@ -11,8 +11,12 @@ describe 'winsw::default' do
   end
 
   before do
-    stub_command("/winsw/services/test_service/test_service.exe status | find \"NonExistent\"").and_return(0)
-    stub_command("/winsw/services/test_service/test_service.exe status | find \"Stopped\"").and_return(1)
+    stub_command("/winsw/services/test_service/test_service.exe status | find /i \"NonExistent\"").and_return(0)
+    stub_command("/winsw/services/test_service/test_service.exe status | find /i \"Stopped\"").and_return(1)
+  end
+
+  it 'downloads winsw' do
+    expect(chef_run).to create_remote_file("/winsw/services/test_service/test_service.exe")
   end
 
   it 'renders the winsw config file' do

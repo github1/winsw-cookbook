@@ -37,21 +37,23 @@ class Chef
       service_base = "#{new_resource.basedir}/#{new_resource.name}"
       service_exec = "#{service_base}/#{new_resource.name}.exe"
 
-      powershell_script "#{new_resource} install .Net framework version 3.5" do
-        code "Install-WindowsFeature Net-Framework-Core"
-      end
-
       directory service_base do
         recursive true
         action :create
       end
 
+      powershell_script "#{new_resource} install .Net framework version 3.5" do
+        code "Install-WindowsFeature Net-Framework-Core"
+      end
+
       remote_file "#{new_resource.name} download winsw" do
         source "http://repo.jenkins-ci.org/releases/com/sun/winsw/winsw/1.16/winsw-1.16-bin.exe"
-        name service_exec
+        path service_exec
+        action :create_if_missing
       end
 
       template ::File.join(service_base,"#{new_resource.name}.xml") do
+        cookbook "winsw"
         source "winsw.xml.erb"
         variables({
           :service_name => service_name,
@@ -65,17 +67,17 @@ class Chef
       execute "#{new_resource} restart" do
         action :nothing
         command "#{service_exec} restart"
-        not_if "#{service_exec} status | find \"NonExistent\""
+        not_if "#{service_exec} status | find /i \"NonExistent\""
       end
 
       execute "#{new_resource} install" do
         command "#{service_exec} install"
-        only_if "#{service_exec} status | find \"NonExistent\""
+        only_if "#{service_exec} status | find /i \"NonExistent\""
       end
 
       execute "#{new_resource} start" do
         command "#{service_exec} start"
-        only_if "#{service_exec} status | find \"Stopped\""
+        only_if "#{service_exec} status | find /i \"Stopped\""
       end
 
     end

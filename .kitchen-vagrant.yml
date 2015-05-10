@@ -3,11 +3,10 @@ driver:
   name: vagrant
 
 provisioner:
-  name: chef_zero
+  name: windows_chef_zero
+  root_path: c:/windows/temp/kitchen
+  ruby_bindir: c:/opscode/chef/embedded/bin
   require_chef_omnibus: false
-  sudo: false
-  root_path: c:/Windows/Temp
-  chef_client_path: c:/opscode/chef/bin/chef-client.bat
 
 platforms:
   - name: win2012r2
@@ -20,13 +19,4 @@ platforms:
 suites:
   - name: default
     run_list:
-      - recipe[winsw::default]
-    attributes:
-      winsw:
-        service:
-          test_service:
-            basedir: '/winsw/services'
-            executable: 'echo'
-            args: ['%test_env_var%','>','test_env_var.txt']
-            env_variables:
-              test_env_var: 'test value'
+      - recipe[fake::default]

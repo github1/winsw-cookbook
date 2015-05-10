@@ -6,6 +6,6 @@
   <env name="<%= key %>" value="<%= value %>"/>
   <% end %>
   <executable><%= @executable %></executable>
-  <arguments><%= @arguments %></arguments>
+  <arguments><%= @arguments.join(' ') %></arguments>
   <logmode>rotate</logmode>
 </service>
