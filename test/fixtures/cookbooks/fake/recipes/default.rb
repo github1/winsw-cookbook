@@ -20,12 +20,8 @@ remote_file '/SimpleWebServer.jar' do
   action :create_if_missing
 end
 
-winsw 'my_servicez' do
+winsw 'my_service' do
   basedir 'C:/service'
   executable 'C:\\openjdk\\openjdk-1.7.0-u60-unofficial-windows-i586-image\\bin\\java'
   args [ '-jar', 'C:\\SimpleWebServer.jar' ]
-end
-
-file '/my_service/index.html' do
-  content '<b>my_service</b>'
 end

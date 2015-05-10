@@ -35,7 +35,7 @@ class Chef
 
       service_name = "$#{new_resource.name}"
       service_base = "#{new_resource.basedir}/#{new_resource.name}"
-      service_exec = "#{service_base}/#{new_resource.name}.exe"
+      service_exec = "#{service_base}/#{new_resource.name}.exe".gsub('/','\\')
 
       directory service_base do
         recursive true
