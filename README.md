@@ -1,6 +1,13 @@
 # winsw-cookbook
 The winsw-cookbook is a library cookbook which provides an LWRP that configures [winsw]; a wrapper executable that can be used to host any executable as an Windows service.
 
+## <a name="usage"></a> Usage
+
+    winsw 'my_winsw_service' do
+      executable 'java'
+      args [ '-jar', 'C:\\my_service.jar' ]
+    end
+
 ## <a name="development"></a> Development
 
 * Source hosted at [GitHub][repo]
