@@ -1,0 +1,7 @@
+name             'winsw'
+maintainer       'YOUR_NAME'
+maintainer_email 'YOUR_EMAIL'
+license          'All rights reserved'
+description      'Installs/Configures winsw'
+long_description 'Installs/Configures winsw'
+version          '0.1.0'

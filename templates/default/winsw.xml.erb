@@ -1,0 +1,11 @@
+<service>
+  <id><%= @service_name %></id>
+  <name><%= @service_name %></name>
+  <description><%= @service_name %></description>
+  <% @env_vars.each do |key,value| %>
+  <env name="<%= key %>" value="<%= value %>"/>
+  <% end %>
+  <executable><%= @executable %></executable>
+  <arguments><%= @arguments %></arguments>
+  <logmode>rotate</logmode>
+</service>

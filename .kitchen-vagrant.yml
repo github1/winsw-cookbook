@@ -1,0 +1,32 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+  require_chef_omnibus: false
+  sudo: false
+  root_path: c:/Windows/Temp
+  chef_client_path: c:/opscode/chef/bin/chef-client.bat
+
+platforms:
+  - name: win2012r2
+    transport:
+      name: ssh
+    driver:
+      box: eval-win2012r2-standard-cheflatest-1.0.4
+      vm_hostname: win2012r2
+
+suites:
+  - name: default
+    run_list:
+      - recipe[winsw::default]
+    attributes:
+      winsw:
+        service:
+          test_service:
+            basedir: '/winsw/services'
+            executable: 'echo'
+            args: ['%test_env_var%','>','test_env_var.txt']
+            env_variables:
+              test_env_var: 'test value'
