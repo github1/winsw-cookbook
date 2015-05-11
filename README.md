@@ -1,5 +1,5 @@
 # winsw-cookbook
-The winsw-cookbook is a library cookbook which provides an LWRP that configures [winsw]; a wrapper executable that can be used to host any executable as an Windows service.
+The winsw-cookbook is a library cookbook which provides an LWRP that configures [kohsuke/winsw][winsw]; a wrapper executable that can be used to host any executable as an Windows service.
 
 ## <a name="development"></a> Development
 
