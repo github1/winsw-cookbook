@@ -1,34 +1,17 @@
 ---
 driver:
-  name: ec2
-  aws_access_key_id: "<%= ENV['AWS_ACCESS_KEY_ID'] %>"
-  aws_secret_access_key: "<%= ENV['AWS_SECRET_ACCESS_KEY'] %>"
-  aws_ssh_key_id: aws_ec2_key_pair
-  transport:
-    ssh_key: .chef/ec2_keys/aws_ec2_key_pair.pem
-    connection_timeout: 10
-    connection_retries: 5
-    username: Administrator
-  region: us-east-1
-  instance_type: m1.medium
-  availability_zone: us-east-1c
-  require_chef_omnibus: false
-  block_device_mappings:
-  - ebs_device_name: /dev/sda1
-    ebs_volume_size: 30
-    ebs_delete_on_termination: true
+  name: vagrant
 
 provisioner:
-  name: windows_chef_zero
-  root_path: c:/windows/temp/kitchen
-  ruby_bindir: c:/opscode/chef/embedded/bin
+  name: chef_zero
 
 platforms:
   - name: win2012r2
     transport:
-      name: ssh
-    driver: 
-      image_id: ami-0cbee364
+      name: winrm
+    driver:
+      box: eval-win2012r2-standard-cheflatest-1.0.4
+      vm_hostname: win2012r2
 
 suites:
   - name: default
