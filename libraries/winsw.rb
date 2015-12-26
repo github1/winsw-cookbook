@@ -9,8 +9,7 @@ class Chef
       kind_of: String,
       name_attribute: true
     attribute :basedir,
-      kind_of: String,
-      default: lazy { |r| Chef::Config[:file_cache_path] }
+      kind_of: String
     attribute :executable,
       kind_of: String,
       required: true
@@ -30,11 +29,11 @@ class Chef
     def whyrun_supported?
       true
     end
-    
-    action(:install) do
+
+    action :install do
 
       service_name = "$#{new_resource.name}"
-      service_base = "#{new_resource.basedir}/#{new_resource.name}"
+      service_base = "#{new_resource.basedir||Chef::Config[:file_cache_path]}/#{new_resource.name}"
       service_exec = "#{service_base}/#{new_resource.name}.exe".gsub('/','\\')
 
       directory service_base do
@@ -81,7 +80,19 @@ class Chef
       end
 
     end
-  
+
+    action :restart do
+
+      service_base = "#{new_resource.basedir||Chef::Config[:file_cache_path]}/#{new_resource.name}"
+      service_exec = "#{service_base}/#{new_resource.name}.exe".gsub('/','\\')
+
+      execute "#{new_resource} restart" do
+        command "#{service_exec} restart"
+        not_if "#{service_exec} status | find /i \"NonExistent\""
+      end
+
+    end
+
   end
 end
 

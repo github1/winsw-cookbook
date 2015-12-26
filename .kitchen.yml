@@ -7,11 +7,8 @@ provisioner:
 
 platforms:
   - name: win2012r2
-    transport:
-      name: winrm
     driver:
-      box: eval-win2012r2-standard-cheflatest-1.0.4
-      vm_hostname: win2012r2
+      box: eval-win2012r2-standard-chef12.0.3-1.0.4
 
 suites:
   - name: default
