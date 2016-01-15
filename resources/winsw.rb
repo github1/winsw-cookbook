@@ -84,8 +84,8 @@ class Chef
 
       execute "#{new_resource.name} stop" do
         command "#{service_exec} stop"
-        ignore_failure true
         not_if "#{service_exec} status | find /i \"NonExistent\""
+        not_if "#{service_exec} status | find /i \"Stopped\""
       end
 
       execute "#{new_resource.name} uninstall" do
