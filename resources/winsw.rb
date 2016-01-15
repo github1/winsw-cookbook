@@ -76,5 +76,18 @@ class Chef
 
     end
 
+    action :uninstall do
+
+      service_name = new_resource.service_name || new_resource.name
+      service_base = "#{new_resource.basedir || Config[:file_cache_path]}/#{service_name}"
+      service_exec = "#{service_base}/#{service_name}.exe".gsub('/', '\\')
+
+      execute "#{new_resource.name} uninstall" do
+        command "#{service_exec} uninstall"
+        not_if "#{service_exec} status | find /i \"NonExistent\""
+      end
+
+    end
+
   end
 end
