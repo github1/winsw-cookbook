@@ -82,6 +82,11 @@ class Chef
       service_base = "#{new_resource.basedir || Config[:file_cache_path]}/#{service_name}"
       service_exec = "#{service_base}/#{service_name}.exe".gsub('/', '\\')
 
+      execute "#{new_resource.name} stop" do
+        command "#{service_exec} stop"
+        not_if "#{service_exec} status | find /i \"Started\""
+      end
+
       execute "#{new_resource.name} uninstall" do
         command "#{service_exec} uninstall"
         not_if "#{service_exec} status | find /i \"NonExistent\""
