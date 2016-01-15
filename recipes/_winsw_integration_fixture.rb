@@ -12,7 +12,7 @@ foreach($item in $zip.items())
 {
 $shell.Namespace("C:\\openjdk").copyhere($item)
 }]
-not_if { ::Dir.entries('/openjdk').size > 2 }
+  not_if { ::Dir.entries('/openjdk').size > 2 }
 end
 
 remote_file '/SimpleWebServer.jar' do
