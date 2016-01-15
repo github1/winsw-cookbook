@@ -18,7 +18,7 @@ Ideally create a topic branch for every separate change you make.
 
 ## <a name="license"></a> License and Author
 
-Author:: [John Collier][github1] (<john.collier4@gmail.com>) 
+Author:: github1[github1] (<github1@github.com>)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
