@@ -23,5 +23,6 @@ end
 winsw 'my_service' do
   basedir 'C:/service'
   executable 'C:\\openjdk\\openjdk-1.7.0-u60-unofficial-windows-i586-image\\bin\\java'
-  args [ '-jar', 'C:\\SimpleWebServer.jar' ]
+  args %w( -Xrs -jar C:\\SimpleWebServer.jar )
+  supported_runtimes %w( v2.0.50727 v4.0 )
 end

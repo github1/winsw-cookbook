@@ -9,6 +9,7 @@ platforms:
   - name: win2012r2
     driver:
       box: eval-win2012r2-standard-chef12.0.3-1.0.4
+      vm_hostname: win2012r2
 
 suites:
   - name: default

@@ -1,10 +1,10 @@
 source 'https://rubygems.org'
 
 gem 'chefspec', '4.5.0'
-gem 'foodcritic', '6.0.0'
 
 group :integration do
-  gem 'test-kitchen', '1.4.2'
-  gem 'kitchen-vagrant', '0.19.0'
-  gem 'winrm-transport', '1.0.3'
+  gem 'test-kitchen', '1.7.1'
+  gem 'kitchen-vagrant', '0.20.0'
+  gem 'winrm-fs', '0.4.0'
+  gem 'mixlib-install', '1.0.4'
 end

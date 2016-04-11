@@ -28,7 +28,7 @@ describe 'winsw::_winsw_spec_fixture' do
   <description>$test_service</description>
   <env name="env0" value="env0 val"/>
   <executable>test.exe</executable>
-  <arguments>["arg0", "arg1"]</arguments>
+  <arguments>arg0 arg1</arguments>
   <logmode>rotate</logmode>
 </service>
     EOT

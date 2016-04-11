@@ -11,6 +11,7 @@ class Chef
     property :executable, kind_of: String, required: true
     property :args, kind_of: Array, default: []
     property :env_variables, kind_of: Hash, default: {}
+    property :supported_runtimes, kind_of: Array, default: %w( v2.0.50727 v4.0 )
 
     action :install do
 
@@ -25,10 +26,28 @@ class Chef
 
       powershell_script "#{new_resource.name} install .Net framework version 3.5" do
         code 'Install-WindowsFeature Net-Framework-Core'
+        only_if {
+          new_resource.supported_runtimes.empty? || (new_resource.supported_runtimes.size == 1 && new_resource.supported_runtimes.include?('v2.0.50727'))
+        }
+      end
+
+      supported_runtime_config = ::File.join(service_base, "#{service_name}.exe.config")
+      if new_resource.supported_runtimes.empty?
+        file supported_runtime_config do
+          action :delete
+        end
+      else
+        template supported_runtime_config do
+          cookbook 'winsw'
+          source 'winsw.exe.config.erb'
+          variables({
+                        :supported_runtimes => new_resource.supported_runtimes
+                    })
+        end
       end
 
       remote_file "#{new_resource.name} download winsw" do
-        source 'http://repo.jenkins-ci.org/releases/com/sun/winsw/winsw/1.16/winsw-1.16-bin.exe'
+        source 'http://repo.jenkins-ci.org/releases/com/sun/winsw/winsw/1.18/winsw-1.18-bin.exe'
         path service_exec
         action :create_if_missing
       end
