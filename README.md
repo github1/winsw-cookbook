@@ -1,5 +1,5 @@
 # winsw-cookbook
-Provides a 'winsw' resource capable of configuring [kohsuke/winsw][winsw]; a wrapper executable that can be used to host any executable as an Windows service.
+Provides a 'winsw' resource capable of configuring [kohsuke/winsw][winsw]; a wrapper executable that can be used to host any executable as a Windows service.
 
 ## <a name="usage"></a> Usage
 
