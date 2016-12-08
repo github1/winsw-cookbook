@@ -82,6 +82,20 @@ class Chef
 
     end
 
+    action :start do
+      execute "#{new_resource.name} start" do
+        command "#{service_exec} start"
+        only_if "#{service_exec} status | find /i \"Stopped\""
+      end
+    end
+
+    action :stop do
+      execute "#{new_resource.name} stop" do
+        command "#{service_exec} stop"
+        only_if "#{service_exec} status | find /i \"Started\""
+      end
+    end
+
     action :restart do
 
       service_name = new_resource.service_name || new_resource.name
