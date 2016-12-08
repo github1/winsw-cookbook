@@ -8,4 +8,7 @@
   <executable><%= @executable %></executable>
   <arguments><%= @arguments.join(' ') %></arguments>
   <logmode>rotate</logmode>
+  <% @options.each do |key, value| %>
+  <<%= key %>><%= value %></<%= key %>>
+  <% end %>
 </service>
