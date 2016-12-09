@@ -11,6 +11,7 @@ class Chef
     property :executable, kind_of: String, required: true
     property :args, kind_of: Array, default: []
     property :env_variables, kind_of: Hash, default: {}
+    property :options, kind_of: Hash, default: {}
     property :supported_runtimes, kind_of: Array, default: %w( v2.0.50727 v4.0 )
 
     action :install do
@@ -59,7 +60,8 @@ class Chef
                       :service_name => "$#{service_name}",
                       :executable => new_resource.executable,
                       :arguments => new_resource.args,
-                      :env_vars => new_resource.env_variables
+                      :env_vars => new_resource.env_variables,
+                      :options => new_resource.options
                   })
         notifies :run, "execute[#{new_resource.name} restart]", :immediately
       end

@@ -7,6 +7,7 @@ describe 'winsw::_winsw_spec_fixture' do
       node.set['winsw']['service']['test_service']['executable'] = 'test.exe'
       node.set['winsw']['service']['test_service']['args'] = ['arg0', 'arg1']
       node.set['winsw']['service']['test_service']['env_variables']['env0'] = 'env0 val'
+      node.set['winsw']['service']['test_service']['options']['stopparentprocessfirst'] = true
     end.converge(described_recipe)
   end
 
@@ -30,6 +31,7 @@ describe 'winsw::_winsw_spec_fixture' do
   <executable>test.exe</executable>
   <arguments>arg0 arg1</arguments>
   <logmode>rotate</logmode>
+  <stopparentprocessfirst>true</stopparentprocessfirst>
 </service>
     EOT
     expect(chef_run).to run_execute('test_service install')
