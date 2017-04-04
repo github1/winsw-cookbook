@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'chefspec', '4.5.0'
+gem 'chefspec'
 
 group :integration do
   gem 'test-kitchen', '1.7.1'
