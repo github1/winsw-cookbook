@@ -7,7 +7,7 @@ class Chef
 
     property :name, kind_of: String, name_attribute: true
     property :service_name, kind_of: String
-    property :on_install, kind_of: Symbol, default: :start
+    property :enabled, kind_of: [TrueClass, FalseClass], default: true
     property :basedir, kind_of: String
     property :executable, kind_of: String, required: true
     property :args, kind_of: Array, default: []
@@ -70,7 +70,7 @@ class Chef
       execute "#{new_resource.name} restart" do
         action :nothing
         command "#{service_exec} restart"
-        not_if { new_resource.on_install == :stop }
+        only_if { new_resource.enabled }
         not_if "#{service_exec} status | find /i \"NonExistent\""
       end
 
@@ -81,13 +81,13 @@ class Chef
 
       execute "#{new_resource.name} start" do
         command "#{service_exec} start"
-        not_if { new_resource.on_install == :stop }
+        only_if { new_resource.enabled }
         only_if "#{service_exec} status | find /i \"Stopped\""
       end
 
       execute "#{new_resource.name} stop" do
         command "#{service_exec} stop"
-        not_if { new_resource.on_install == :start }
+        not_if { new_resource.enabled }
         only_if "#{service_exec} status | find /i \"Started\""
       end
 

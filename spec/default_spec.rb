@@ -25,7 +25,7 @@ describe 'winsw resource' do
   describe 'when installed already' do
     let(:chef_run) do
       base_spec do |node|
-        node.default['winsw']['service']['test_service']['on_install'] = :stop
+        node.default['winsw']['service']['test_service']['enabled'] = false
       end
     end
 
@@ -76,11 +76,11 @@ describe 'winsw resource' do
 
   end
 
-  describe 'when on_install = :stop' do
+  describe 'when disabled' do
     describe 'when already started' do
       let(:chef_run) do
         base_spec do |node|
-          node.default['winsw']['service']['test_service']['on_install'] = :stop
+          node.default['winsw']['service']['test_service']['enabled'] = false
         end
       end
 
@@ -102,7 +102,7 @@ describe 'winsw resource' do
     describe 'when already stopped' do
       let(:chef_run) do
         base_spec do |node|
-          node.default['winsw']['service']['test_service']['on_install'] = :stop
+          node.default['winsw']['service']['test_service']['enabled'] = false
         end
       end
 
