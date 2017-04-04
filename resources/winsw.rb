@@ -64,7 +64,7 @@ class Chef
                       :env_vars => new_resource.env_variables,
                       :options => new_resource.options
                   })
-        notifies :run, "execute[#{new_resource.name} restart]", :immediately
+        notifies :run, "execute[#{new_resource.name} restart]", :immediately if new_resource.enabled
       end
 
       execute "#{new_resource.name} restart" do
