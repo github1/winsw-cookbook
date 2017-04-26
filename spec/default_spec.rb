@@ -18,6 +18,30 @@ describe 'winsw resource' do
     node.default['winsw']['service']['test_service']['options']['stopparentprocessfirst'] = true
   end
 
+  def the_service_exists(service_name, state = true)
+    the_service_is(service_name, :non_existant, !state)
+  end
+
+  def the_service_does_not_exist(service_name)
+    the_service_exists(service_name, false)
+  end
+
+  def the_service_is(service_name, status, state = true)
+    status_text = case status
+                    when :non_existant then
+                      'NonExistent'
+                    when :stopped then
+                      'Stopped'
+                    when :running then
+                      'Started'
+                  end
+    stub_command("\\winsw\\services\\#{service_name}\\#{service_name}.exe status | %systemroot%\system32\find.exe /i \"#{status_text}\"").and_return(state)
+  end
+
+  def the_service_is_not(service_name, status)
+    the_service_is(service_name, status, false)
+  end
+
   before do
     stub_command(/.*/).and_return(true)
   end
@@ -30,7 +54,7 @@ describe 'winsw resource' do
     end
 
     before do
-      stub_command("\\winsw\\services\\test_service\\test_service.exe status | find /i \"NonExistent\"").and_return(false)
+      the_service_exists('test_service');
     end
 
     it 'is not installed again' do
@@ -45,8 +69,8 @@ describe 'winsw resource' do
     end
 
     before do
-      stub_command("\\winsw\\services\\test_service\\test_service.exe status | find /i \"NonExistent\"").and_return(true)
-      stub_command("\\winsw\\services\\test_service\\test_service.exe status | find /i \"Stopped\"").and_return(true)
+      the_service_does_not_exist('test_service')
+      the_service_is('test_service', :stopped)
     end
 
     it 'downloads winsw' do
@@ -85,9 +109,9 @@ describe 'winsw resource' do
       end
 
       before do
-        stub_command("\\winsw\\services\\test_service\\test_service.exe status | find /i \"NonExistent\"").and_return(false)
-        stub_command("\\winsw\\services\\test_service\\test_service.exe status | find /i \"Stopped\"").and_return(false)
-        stub_command("\\winsw\\services\\test_service\\test_service.exe status | find /i \"Started\"").and_return(true)
+        the_service_exists('test_service')
+        the_service_is_not('test_service', :stopped)
+        the_service_is('test_service', :running)
       end
 
       it 'updates the config' do
@@ -107,9 +131,9 @@ describe 'winsw resource' do
       end
 
       before do
-        stub_command("\\winsw\\services\\test_service\\test_service.exe status | find /i \"NonExistent\"").and_return(false)
-        stub_command("\\winsw\\services\\test_service\\test_service.exe status | find /i \"Stopped\"").and_return(true)
-        stub_command("\\winsw\\services\\test_service\\test_service.exe status | find /i \"Started\"").and_return(false)
+        the_service_does_not_exist('test_service')
+        the_service_is('test_service', :stopped)
+        the_service_is_not('test_service', :running)
       end
 
       it 'updates the config' do

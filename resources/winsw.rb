@@ -15,11 +15,18 @@ class Chef
     property :options, kind_of: Hash, default: {}
     property :supported_runtimes, kind_of: Array, default: %w( v2.0.50727 v4.0 )
 
+    def service_details
+      _service_name = @service_name || @name
+      _service_base = "#{@basedir || Config[:file_cache_path]}/#{_service_name}"
+      _service_exec = "#{_service_base}/#{_service_name}.exe".gsub('/', '\\')
+      { :name => _service_name, :basedir => _service_base, :exec => _service_exec }
+    end
+
     action :install do
 
-      service_name = new_resource.service_name || new_resource.name
-      service_base = "#{new_resource.basedir || Config[:file_cache_path]}/#{service_name}"
-      service_exec = "#{service_base}/#{service_name}.exe".gsub('/', '\\')
+      service_name = new_resource.service_details[:name]
+      service_base = new_resource.service_details[:basedir]
+      service_exec = new_resource.service_details[:exec]
 
       directory service_base do
         recursive true
@@ -71,70 +78,71 @@ class Chef
         action :nothing
         command "#{service_exec} restart"
         only_if { new_resource.enabled }
-        not_if "#{service_exec} status | find /i \"NonExistent\""
+        only_if "#{service_exec} status | %systemroot%\system32\find.exe /i \"Started\""
       end
 
       execute "#{new_resource.name} install" do
         command "#{service_exec} install"
-        only_if "#{service_exec} status | find /i \"NonExistent\""
+        only_if "#{service_exec} status | %systemroot%\system32\find.exe /i \"NonExistent\""
       end
 
       execute "#{new_resource.name} start" do
         command "#{service_exec} start"
         only_if { new_resource.enabled }
-        only_if "#{service_exec} status | find /i \"Stopped\""
+        only_if "#{service_exec} status | %systemroot%\system32\find.exe /i \"Stopped\""
       end
 
       execute "#{new_resource.name} stop" do
         command "#{service_exec} stop"
         not_if { new_resource.enabled }
-        only_if "#{service_exec} status | find /i \"Started\""
+        only_if "#{service_exec} status | %systemroot%\system32\find.exe /i \"Started\""
       end
 
     end
 
     action :start do
+
+      service_exec = new_resource.service_details[:exec]
+
       execute "#{new_resource.name} start" do
         command "#{service_exec} start"
-        only_if "#{service_exec} status | find /i \"Stopped\""
+        only_if "#{service_exec} status | %systemroot%\system32\find.exe /i \"Stopped\""
       end
     end
 
     action :stop do
+
+      service_exec = new_resource.service_details[:exec]
+
       execute "#{new_resource.name} stop" do
         command "#{service_exec} stop"
-        only_if "#{service_exec} status | find /i \"Started\""
+        only_if "#{service_exec} status | %systemroot%\system32\find.exe /i \"Started\""
       end
     end
 
     action :restart do
 
-      service_name = new_resource.service_name || new_resource.name
-      service_base = "#{new_resource.basedir || Config[:file_cache_path]}/#{service_name}"
-      service_exec = "#{service_base}/#{service_name}.exe".gsub('/', '\\')
+      service_exec = new_resource.service_details[:exec]
 
       execute "#{new_resource.name} restart" do
         command "#{service_exec} restart"
-        not_if "#{service_exec} status | find /i \"NonExistent\""
+        only_if "#{service_exec} status | %systemroot%\system32\find.exe /i \"Started\""
       end
 
     end
 
     action :uninstall do
 
-      service_name = new_resource.service_name || new_resource.name
-      service_base = "#{new_resource.basedir || Config[:file_cache_path]}/#{service_name}"
-      service_exec = "#{service_base}/#{service_name}.exe".gsub('/', '\\')
+      service_exec = new_resource.service_details[:exec]
 
       execute "#{new_resource.name} stop" do
         command "#{service_exec} stop"
-        not_if "#{service_exec} status | find /i \"NonExistent\""
-        not_if "#{service_exec} status | find /i \"Stopped\""
+        only_if "#{service_exec} status | %systemroot%\system32\find.exe /i \"Stopped\""
       end
 
       execute "#{new_resource.name} uninstall" do
         command "#{service_exec} uninstall"
-        not_if "#{service_exec} status | find /i \"NonExistent\""
+        not_if "#{service_exec} status | %systemroot%\system32\find.exe /i \"NonExistent\""
       end
 
     end
