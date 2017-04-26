@@ -35,7 +35,7 @@ describe 'winsw resource' do
                     when :running then
                       'Started'
                   end
-    stub_command("\\winsw\\services\\#{service_name}\\#{service_name}.exe status | %systemroot%\system32\find.exe /i \"#{status_text}\"").and_return(state)
+    stub_command("\\winsw\\services\\#{service_name}\\#{service_name}.exe status | %systemroot%\\system32\\find.exe /i \"#{status_text}\"").and_return(state)
   end
 
   def the_service_is_not(service_name, status)
