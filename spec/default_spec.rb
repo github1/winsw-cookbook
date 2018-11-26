@@ -2,84 +2,32 @@ require_relative 'spec_helper.rb'
 
 describe 'winsw resource' do
 
-  def base_spec(&block)
-    ChefSpec::SoloRunner.new(step_into: ['winsw'], log_level: :debug) do |node|
-      setup_node node
-      block.call node unless block.nil?
-    end.converge('winsw::_winsw_spec_fixture')
-  end
-
-  def setup_node(node)
-    node.default['winsw']['service']['test_service']['action'] = :install
-    node.default['winsw']['service']['test_service']['basedir'] = '/winsw/services'
-    node.default['winsw']['service']['test_service']['executable'] = 'test.exe'
-    node.default['winsw']['service']['test_service']['args'] = ['arg0', 'arg1']
-    node.default['winsw']['service']['test_service']['env_variables']['env0'] = 'env0 val'
-    node.default['winsw']['service']['test_service']['options']['stopparentprocessfirst'] = true
-  end
-
-  def the_service_exists(service_name, state = true)
-    the_service_is(service_name, :non_existant, !state)
-  end
-
-  def the_service_does_not_exist(service_name)
-    the_service_exists(service_name, false)
-  end
-
-  def the_service_is(service_name, status, state = true)
-    status_text = case status
-                    when :non_existant then
-                      'NonExistent'
-                    when :stopped then
-                      'Stopped'
-                    when :running then
-                      'Started'
-                  end
-    stub_command("\\winsw\\services\\#{service_name}\\#{service_name}.exe status | %systemroot%\\system32\\find.exe /i \"#{status_text}\"").and_return(state)
-  end
-
-  def the_service_is_not(service_name, status)
-    the_service_is(service_name, status, false)
-  end
-
   before do
     stub_command(/.*/).and_return(true)
   end
 
-  describe 'when installed already' do
-    let(:chef_run) do
-      base_spec do |node|
-        node.default['winsw']['service']['test_service']['enabled'] = false
-      end
-    end
-
-    before do
-      the_service_exists('test_service');
-    end
-
-    it 'is not installed again' do
-      expect(chef_run).not_to run_execute('test_service install')
-    end
-
-  end
-
-  describe 'when not installed yet' do
-    let(:chef_run) do
-      base_spec
-    end
-
-    before do
-      the_service_does_not_exist('test_service')
-      the_service_is('test_service', :stopped)
-    end
-
-    it 'downloads winsw' do
-      expect(chef_run).to create_remote_file_if_missing('test_service download winsw')
-    end
-
-    it 'renders the winsw config file' do
-      expect(chef_run).to create_template('/winsw/services/test_service/test_service.xml')
-      expect(chef_run).to render_file('/winsw/services/test_service/test_service.xml').with_content(<<-EOT.strip)
+  describe 'install action' do
+    describe 'service is not disabled' do
+      describe 'service not yet installed' do
+        let(:chef_run) do
+          base_spec
+        end
+        before do
+          the_service_does_not_exist('test_service')
+          the_winsw_binaries_match('test_service', false)
+        end
+        it 'downloads winsw' do
+          expect(chef_run).to create_remote_file('test_service download winsw')
+        end
+        it 'updates the executable' do
+          expect(chef_run).to run_execute('test_service update executable')
+          expect(chef_run.execute('test_service update executable'))
+              .to notify('execute[test_service restart re-configured service]')
+                      .to(:run).immediately
+        end
+        it 'renders the winsw config file' do
+          expect(chef_run).to create_template('/winsw/services/test_service/test_service.xml')
+          expect(chef_run).to render_file('/winsw/services/test_service/test_service.xml').with_content(<<-EOT.strip)
 <service>
   <id>$test_service</id>
   <name>$test_service</name>
@@ -90,59 +38,170 @@ describe 'winsw resource' do
   <logmode>rotate</logmode>
   <stopparentprocessfirst>true</stopparentprocessfirst>
 </service>
-      EOT
+          EOT
+          expect(chef_run.template('/winsw/services/test_service/test_service.xml'))
+              .to notify('execute[test_service restart re-configured service]')
+                      .to(:run).immediately
+        end
+        it 'is installed' do
+          expect(chef_run).to run_execute('test_service install')
+        end
+        it 'starts the service' do
+          the_service_is('test_service', :stopped)
+          expect(chef_run).to run_execute('test_service start enabled service')
+        end
+      end
+
+      describe 'service already installed' do
+        let(:chef_run) do
+          base_spec
+        end
+        before do
+          the_service_exists('test_service')
+          the_service_is('test_service', :started)
+        end
+        it 'is not installed again' do
+          expect(chef_run).not_to run_execute('test_service install')
+        end
+      end
+
+      describe '.Net 3.5 runtime enablement' do
+        describe 'if v2.0.50727 is the only supported runtime' do
+          let(:chef_run) do
+            base_spec do |node|
+              node.default['winsw']['service']['test_service']['supported_runtimes'] = %w( v2.0.50727 )
+            end
+          end
+          it 'enables .Net 3.5 runtime' do
+            expect(chef_run).to run_powershell_script('test_service install .Net framework version 3.5')
+          end
+        end
+      end
     end
 
-    it 'starts the service' do
-      expect(chef_run).to run_execute('test_service install')
-      expect(chef_run).to run_execute('test_service start')
+    describe 'service is disabled' do
+      let(:chef_run) do
+        base_spec do |node|
+          node.default['winsw']['service']['test_service']['enabled'] = false
+        end
+      end
+      it 'does not trigger restarts on configuration changes' do
+        expect(chef_run.execute('test_service update executable'))
+            .not_to notify('execute[test_service restart re-configured service]')
+                        .to(:run).immediately
+        expect(chef_run.template('/winsw/services/test_service/test_service.xml'))
+            .not_to notify('execute[test_service restart re-configured service]')
+                        .to(:run).immediately
+      end
+      it 'does not start the service' do
+        expect(chef_run).not_to run_execute('test_service start enabled service')
+      end
     end
-
   end
 
-  describe 'when disabled' do
-    describe 'when already started' do
-      let(:chef_run) do
-        base_spec do |node|
-          node.default['winsw']['service']['test_service']['enabled'] = false
-        end
+  describe 'uninstall action' do
+    let(:chef_run) do
+      base_spec do |node|
+        node.default['winsw']['service']['test_service']['action'] = :uninstall
       end
-
+    end
+    describe 'service is installed' do
       before do
         the_service_exists('test_service')
-        the_service_is_not('test_service', :stopped)
-        the_service_is('test_service', :running)
       end
-
-      it 'updates the config' do
-        expect(chef_run).to render_file('/winsw/services/test_service/test_service.xml')
+      it 'uninstalls the service' do
+        expect(chef_run).to run_execute('test_service uninstall')
       end
-
-      it 'it stops the service' do
+    end
+    describe 'service is started' do
+      before do
+        the_service_is('test_service', :started)
+      end
+      it 'stops the service' do
         expect(chef_run).to run_execute('test_service stop')
+      end
+      it 'uninstalls the service' do
+        expect(chef_run).to run_execute('test_service uninstall')
+      end
+    end
+    describe 'service is not installed' do
+      before do
+        the_service_does_not_exist('test_service')
+      end
+      it 'does not try to uninstall it' do
+        expect(chef_run).not_to run_execute('test_service uninstall')
+      end
+    end
+  end
+
+  describe 'start action' do
+    let(:chef_run) do
+      base_spec do |node|
+        node.default['winsw']['service']['test_service']['action'] = :start
+      end
+    end
+    describe 'service is stopped' do
+      before do
+        the_service_is('test_service', :stopped)
+      end
+      it 'starts the service' do
+        expect(chef_run).to run_execute('test_service start')
+      end
+    end
+    describe 'service is already started' do
+      before do
+        the_service_is('test_service', :started)
+      end
+      it 'does not try to start it again' do
         expect(chef_run).not_to run_execute('test_service start')
       end
     end
-    describe 'when already stopped' do
-      let(:chef_run) do
-        base_spec do |node|
-          node.default['winsw']['service']['test_service']['enabled'] = false
-        end
-      end
+  end
 
+  describe 'stop action' do
+    let(:chef_run) do
+      base_spec do |node|
+        node.default['winsw']['service']['test_service']['action'] = :stop
+      end
+    end
+    describe 'service is started' do
+      before do
+        the_service_is('test_service', :started)
+      end
+      it 'stops the service' do
+        expect(chef_run).to run_execute('test_service stop')
+      end
+    end
+    describe 'service is stopped' do
+      before do
+        the_service_is('test_service', :stopped)
+      end
+      it 'does not try to stop it again' do
+        expect(chef_run).not_to run_execute('test_service stop')
+      end
+    end
+  end
+
+  describe 'restart action' do
+    let(:chef_run) do
+      base_spec do |node|
+        node.default['winsw']['service']['test_service']['action'] = :restart
+      end
+    end
+    describe 'service is installed' do
+      before do
+        the_service_exists('test_service')
+      end
+      it 'restarts the service' do
+        expect(chef_run).to run_execute('test_service restart')
+      end
+    end
+    describe 'service is not installed' do
       before do
         the_service_does_not_exist('test_service')
-        the_service_is('test_service', :stopped)
-        the_service_is_not('test_service', :running)
       end
-
-      it 'updates the config' do
-        expect(chef_run).to render_file('/winsw/services/test_service/test_service.xml')
-      end
-
-      it 'it does not explicitly stop the service' do
-        expect(chef_run).not_to run_execute('test_service stop')
-        expect(chef_run).not_to run_execute('test_service start')
+      it 'does not try to restart it' do
+        expect(chef_run).not_to run_execute('test_service restart')
       end
     end
   end
