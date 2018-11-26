@@ -8,6 +8,7 @@ class Chef
     property :name, kind_of: String, name_attribute: true
     property :service_name, kind_of: String
     property :windows_service_name, kind_of: String
+    property :service_description, kind_of: String
     property :service_exec, kind_of: String
     property :enabled, kind_of: [TrueClass, FalseClass], default: true
     property :basedir, kind_of: String
@@ -16,6 +17,7 @@ class Chef
     property :env_variables, kind_of: Hash, default: {}
     property :log_mode, kind_of: String, default: 'rotate'
     property :options, kind_of: Hash, default: {}
+    property :extensions, kind_of: Array, default: []
     property :supported_runtimes, kind_of: Array, default: %w( v2.0.50727 v4.0 )
     property :winsw_bin_url, kind_of: String, default: 'http://repo.jenkins-ci.org/releases/com/sun/winsw/winsw/1.18/winsw-1.18-bin.exe'
 
@@ -25,6 +27,9 @@ class Chef
 
       windows_service_name = instance_variable_get(:@windows_service_name) || "$#{service_name}"
       instance_variable_set(:@windows_service_name, windows_service_name)
+
+      service_description = instance_variable_get(:@service_description) || windows_service_name
+      instance_variable_set(:@service_description, service_description)
 
       basedir = ::File.join((instance_variable_get(:@basedir) || "Config[:file_cache_path]}/#{service_name}"), service_name)
       instance_variable_set(:@basedir, basedir)
@@ -77,18 +82,16 @@ class Chef
         not_if "fc /B #{winsw_download_path} #{service_exec}"
         notifies :run, "execute[#{new_resource.name} restart re-configured service]", :immediately if new_resource.enabled
       end
-
-      template ::File.join(service_base, "#{service_name}.xml") do
-        cookbook 'winsw'
-        source 'winsw.xml.erb'
-        variables({
-                      :service_name => windows_service_name,
-                      :executable => new_resource.executable,
-                      :arguments => new_resource.args,
-                      :env_vars => new_resource.env_variables,
-                      :log_mode => new_resource.log_mode,
-                      :options => new_resource.options
-                  })
+      file ::File.join(service_base, "#{service_name}.xml") do
+        content prepare_config_xml(
+                    windows_service_name,
+                    new_resource.service_description,
+                    new_resource.env_variables,
+                    new_resource.executable,
+                    new_resource.args,
+                    new_resource.log_mode,
+                    new_resource.options,
+                    new_resource.extensions)
         notifies :run, "execute[#{new_resource.name} restart re-configured service]", :immediately if new_resource.enabled
       end
 

@@ -26,20 +26,20 @@ describe 'winsw resource' do
                       .to(:run).immediately
         end
         it 'renders the winsw config file' do
-          expect(chef_run).to create_template('/winsw/services/test_service/test_service.xml')
+          expect(chef_run).to create_file('/winsw/services/test_service/test_service.xml')
           expect(chef_run).to render_file('/winsw/services/test_service/test_service.xml').with_content(<<-EOT.strip)
 <service>
-  <id>$test_service</id>
-  <name>$test_service</name>
-  <description>$test_service</description>
-  <env name="env0" value="env0 val"/>
-  <executable>test.exe</executable>
-  <arguments>arg0 arg1</arguments>
-  <logmode>rotate</logmode>
-  <stopparentprocessfirst>true</stopparentprocessfirst>
+ <id>$test_service</id>
+ <name>$test_service</name>
+ <description>$test_service</description>
+ <executable>test.exe</executable>
+ <arguments>arg0 arg1</arguments>
+ <env name="env0" value="env0 val"/>
+ <stopparentprocessfirst>true</stopparentprocessfirst>
+ <logmode>rotate</logmode>
 </service>
           EOT
-          expect(chef_run.template('/winsw/services/test_service/test_service.xml'))
+          expect(chef_run.file('/winsw/services/test_service/test_service.xml'))
               .to notify('execute[test_service restart re-configured service]')
                       .to(:run).immediately
         end
@@ -89,7 +89,7 @@ describe 'winsw resource' do
         expect(chef_run.execute('test_service update executable'))
             .not_to notify('execute[test_service restart re-configured service]')
                         .to(:run).immediately
-        expect(chef_run.template('/winsw/services/test_service/test_service.xml'))
+        expect(chef_run.file('/winsw/services/test_service/test_service.xml'))
             .not_to notify('execute[test_service restart re-configured service]')
                         .to(:run).immediately
       end
