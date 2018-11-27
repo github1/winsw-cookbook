@@ -19,9 +19,15 @@ describe 'winsw resource' do
         it 'downloads winsw' do
           expect(chef_run).to create_remote_file('test_service download winsw')
         end
-        it 'updates the executable' do
+        it 'updates the winsw executable' do
           expect(chef_run).to run_execute('test_service update executable')
           expect(chef_run.execute('test_service update executable'))
+              .to notify('execute[test_service restart re-configured service]')
+                      .to(:run).immediately
+        end
+        it 'renders an entrypoint.bat' do
+          expect(chef_run).to create_file('/winsw/services/test_service/test_service.entrypoint.bat')
+          expect(chef_run.file('/winsw/services/test_service/test_service.entrypoint.bat'))
               .to notify('execute[test_service restart re-configured service]')
                       .to(:run).immediately
         end
@@ -32,7 +38,7 @@ describe 'winsw resource' do
  <id>$test_service</id>
  <name>$test_service</name>
  <description>$test_service</description>
- <executable>test.exe</executable>
+ <executable>%BASE%\\test_service.entrypoint.bat</executable>
  <arguments>arg0 arg1</arguments>
  <env name="env0" value="env0 val"/>
  <stopparentprocessfirst>true</stopparentprocessfirst>

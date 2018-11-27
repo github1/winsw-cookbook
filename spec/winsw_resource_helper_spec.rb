@@ -51,6 +51,24 @@ describe 'WinSw::ResourceHelper' do
   <keepFiles>8</keepFiles>
  </log>
 </service>])
+      expect(helper.prepare_config_xml(
+          'a_service',
+          'a_service',
+          {},
+          'java.exe',
+          %w(),
+          'rotate',
+          {
+              :log => {
+                  :@mode => 'reset'
+              }
+          })).to eq(%q[<service>
+ <id>a_service</id>
+ <name>a_service</name>
+ <description>a_service</description>
+ <executable>java.exe</executable>
+ <log mode="reset"/>
+</service>])
     end
     it 'renders extensions' do
       expect(helper.prepare_config_xml(

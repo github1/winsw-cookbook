@@ -19,7 +19,7 @@ class Chef
     property :options, kind_of: Hash, default: {}
     property :extensions, kind_of: Array, default: []
     property :supported_runtimes, kind_of: Array, default: %w( v2.0.50727 v4.0 )
-    property :winsw_bin_url, kind_of: String, default: 'http://repo.jenkins-ci.org/releases/com/sun/winsw/winsw/1.18/winsw-1.18-bin.exe'
+    property :winsw_bin_url, kind_of: String, default: 'https://github.com/kohsuke/winsw/releases/download/winsw-v2.1.2/WinSW.NET4.exe'
 
     def after_created
       service_name = instance_variable_get(:@service_name) || instance_variable_get(:@name)
@@ -82,12 +82,27 @@ class Chef
         not_if "fc /B #{winsw_download_path} #{service_exec}"
         notifies :run, "execute[#{new_resource.name} restart re-configured service]", :immediately if new_resource.enabled
       end
+
+      file ::File.join(service_base, "#{service_name}.entrypoint.bat") do
+        content %Q[@echo off
+if "%WINSW_SVC_EXECUTABLE%"=="" (
+goto setentrypoint
+)
+goto :run
+:setentrypoint
+set "WINSW_SVC_EXECUTABLE=#{new_resource.executable}"
+:run
+echo Running %WINSW_SVC_EXECUTABLE%
+%WINSW_SVC_EXECUTABLE% %*]
+        notifies :run, "execute[#{new_resource.name} restart re-configured service]", :immediately if new_resource.enabled
+      end
+
       file ::File.join(service_base, "#{service_name}.xml") do
         content prepare_config_xml(
                     windows_service_name,
                     new_resource.service_description,
                     new_resource.env_variables,
-                    new_resource.executable,
+                    "%BASE%\\#{service_name}.entrypoint.bat",
                     new_resource.args,
                     new_resource.log_mode,
                     new_resource.options,

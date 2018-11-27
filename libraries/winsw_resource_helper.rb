@@ -3,7 +3,7 @@ module WinSW
     def build_start_resource(name)
       service_exec = new_resource.service_exec
       execute name do
-        command "#{service_exec} start"
+        command "set \"WINSW_SVC_EXECUTABLE=rem\" && #{service_exec} test && #{service_exec} start"
         only_if self.status_is(service_exec, :stopped)
       end
     end
@@ -20,7 +20,7 @@ module WinSW
     def build_restart_resource(name)
       service_exec = new_resource.service_exec
       execute name do
-        command "#{service_exec} restart"
+        command "set \"WINSW_SVC_EXECUTABLE=rem\" && #{service_exec} test && #{service_exec} restart"
         not_if self.status_is(service_exec, :non_existent)
       end
     end
