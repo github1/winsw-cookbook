@@ -5,28 +5,43 @@ class Chef
 
     default_action :install
 
-    property :name, kind_of: String, name_attribute: true
-    property :service_name, kind_of: String
-    property :enabled, kind_of: [TrueClass, FalseClass], default: true
-    property :basedir, kind_of: String
-    property :executable, kind_of: String, required: true
-    property :args, kind_of: Array, default: []
-    property :env_variables, kind_of: Hash, default: {}
-    property :options, kind_of: Hash, default: {}
-    property :supported_runtimes, kind_of: Array, default: %w( v2.0.50727 v4.0 )
+    property :service_name, String
+    property :windows_service_name, String
+    property :service_description, String
+    property :service_exec, String
+    property :enabled, [TrueClass, FalseClass], default: true
+    property :basedir, String
+    property :executable, String, required: true
+    property :args, Array, default: []
+    property :env_variables, Hash, default: {}
+    property :log_mode, String, default: 'rotate'
+    property :options, Hash, default: {}
+    property :extensions, Array, default: []
+    property :supported_runtimes, Array, default: %w( v2.0.50727 v4.0 )
+    property :winsw_bin_url, String, default: 'https://github.com/kohsuke/winsw/releases/download/winsw-v2.1.2/WinSW.NET4.exe'
 
-    def service_details
-      _service_name = @service_name || @name
-      _service_base = "#{@basedir || Config[:file_cache_path]}/#{_service_name}"
-      _service_exec = "#{_service_base}/#{_service_name}.exe".gsub('/', '\\')
-      { :name => _service_name, :basedir => _service_base, :exec => _service_exec }
+    def after_created
+      service_name = instance_variable_get(:@service_name) || instance_variable_get(:@name)
+      instance_variable_set(:@service_name, service_name)
+
+      windows_service_name = instance_variable_get(:@windows_service_name) || "$#{service_name}"
+      instance_variable_set(:@windows_service_name, windows_service_name)
+
+      service_description = instance_variable_get(:@service_description) || windows_service_name
+      instance_variable_set(:@service_description, service_description)
+
+      basedir = ::File.join((instance_variable_get(:@basedir) || "Config[:file_cache_path]}/#{service_name}"), service_name)
+      instance_variable_set(:@basedir, basedir)
+      instance_variable_set(:@service_exec, "#{basedir}/#{service_name}.exe".gsub('/', '\\'))
     end
 
     action :install do
+      extend ::WinSW::ResourceHelper
 
-      service_name = new_resource.service_details[:name]
-      service_base = new_resource.service_details[:basedir]
-      service_exec = new_resource.service_details[:exec]
+      service_name = new_resource.service_name
+      windows_service_name = new_resource.windows_service_name
+      service_base = new_resource.basedir
+      service_exec = new_resource.service_exec
 
       directory service_base do
         recursive true
@@ -55,96 +70,85 @@ class Chef
         end
       end
 
+      winsw_download_path = "#{Config[:file_cache_path]}\\#{::File.basename(new_resource.winsw_bin_url)}"
       remote_file "#{new_resource.name} download winsw" do
-        source 'http://repo.jenkins-ci.org/releases/com/sun/winsw/winsw/1.18/winsw-1.18-bin.exe'
-        path service_exec
-        action :create_if_missing
+        source new_resource.winsw_bin_url
+        path ::File.join(Config[:file_cache_path], ::File.basename(new_resource.winsw_bin_url))
       end
 
-      template ::File.join(service_base, "#{service_name}.xml") do
-        cookbook 'winsw'
-        source 'winsw.xml.erb'
-        variables({
-                      :service_name => "$#{service_name}",
-                      :executable => new_resource.executable,
-                      :arguments => new_resource.args,
-                      :env_vars => new_resource.env_variables,
-                      :options => new_resource.options
-                  })
-        notifies :run, "execute[#{new_resource.name} restart]", :immediately if new_resource.enabled
+      execute "#{new_resource.name} update executable" do
+        command "net stop \"#{windows_service_name}\" & Ver > nul & copy /B /Y #{winsw_download_path} #{service_exec}"
+        not_if "fc /B #{winsw_download_path} #{service_exec}"
+        notifies :run, "execute[#{new_resource.name} restart re-configured service]", :immediately if new_resource.enabled
       end
 
-      execute "#{new_resource.name} restart" do
-        action :nothing
-        command "#{service_exec} restart"
-        only_if { new_resource.enabled }
-        only_if "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"Started\""
+      file ::File.join(service_base, "#{service_name}.entrypoint.bat") do
+        content %Q[@echo off
+if "%WINSW_SVC_EXECUTABLE%"=="" (
+goto setentrypoint
+)
+goto :run
+:setentrypoint
+set "WINSW_SVC_EXECUTABLE=#{new_resource.executable}"
+:run
+echo Running %WINSW_SVC_EXECUTABLE%
+%WINSW_SVC_EXECUTABLE% %*]
+        notifies :run, "execute[#{new_resource.name} restart re-configured service]", :immediately if new_resource.enabled
+      end
+
+      file ::File.join(service_base, "#{service_name}.xml") do
+        content prepare_config_xml(
+                    windows_service_name,
+                    new_resource.service_description,
+                    new_resource.env_variables,
+                    "%BASE%\\#{service_name}.entrypoint.bat",
+                    new_resource.args,
+                    new_resource.log_mode,
+                    new_resource.options,
+                    new_resource.extensions)
+        notifies :run, "execute[#{new_resource.name} restart re-configured service]", :immediately if new_resource.enabled
       end
 
       execute "#{new_resource.name} install" do
         command "#{service_exec} install"
-        only_if "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"NonExistent\""
+        only_if status_is(service_exec, :non_existent)
       end
 
-      execute "#{new_resource.name} start" do
-        command "#{service_exec} start"
-        only_if { new_resource.enabled }
-        only_if "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"Stopped\""
-      end
+      restart_resource = build_restart_resource "#{new_resource.name} restart re-configured service"
+      restart_resource.action :nothing
+      restart_resource.only_if { new_resource.enabled }
 
-      execute "#{new_resource.name} stop" do
-        command "#{service_exec} stop"
-        not_if { new_resource.enabled }
-        only_if "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"Started\""
-      end
+      start_resource = build_start_resource "#{new_resource.name} start enabled service"
+      start_resource.only_if { new_resource.enabled }
+
+      stop_resource = build_stop_resource "#{new_resource.name} stop disabled service"
+      stop_resource.not_if { new_resource.enabled }
 
     end
 
     action :start do
-
-      service_exec = new_resource.service_details[:exec]
-
-      execute "#{new_resource.name} start" do
-        command "#{service_exec} start"
-        only_if "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"Stopped\""
-      end
+      extend ::WinSW::ResourceHelper
+      build_start_resource "#{new_resource.name} start"
     end
 
     action :stop do
-
-      service_exec = new_resource.service_details[:exec]
-
-      execute "#{new_resource.name} stop" do
-        command "#{service_exec} stop"
-        only_if "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"Started\""
-      end
+      extend ::WinSW::ResourceHelper
+      build_stop_resource "#{new_resource.name} stop"
     end
 
     action :restart do
-
-      service_exec = new_resource.service_details[:exec]
-
-      execute "#{new_resource.name} restart" do
-        command "#{service_exec} restart"
-        only_if "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"Started\""
-      end
-
+      extend ::WinSW::ResourceHelper
+      build_restart_resource "#{new_resource.name} restart"
     end
 
     action :uninstall do
-
-      service_exec = new_resource.service_details[:exec]
-
-      execute "#{new_resource.name} stop" do
-        command "#{service_exec} stop"
-        only_if "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"Stopped\""
-      end
-
+      extend ::WinSW::ResourceHelper
+      service_exec = new_resource.service_exec
+      build_stop_resource "#{new_resource.name} stop"
       execute "#{new_resource.name} uninstall" do
         command "#{service_exec} uninstall"
-        not_if "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"NonExistent\""
+        not_if status_is(service_exec, :non_existent)
       end
-
     end
 
   end

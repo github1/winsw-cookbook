@@ -22,7 +22,20 @@ end
 
 winsw 'my_service' do
   basedir 'C:/service'
+  winsw_bin_url 'https://github.com/kohsuke/winsw/releases/download/winsw-v2.1.2/WinSW.NET4.exe'
   executable 'C:\\openjdk\\openjdk-1.7.0-u60-unofficial-windows-i586-image\\bin\\java'
   args %w( -Xrs -jar C:\\SimpleWebServer.jar )
-  supported_runtimes %w( v2.0.50727 v4.0 )
+  options :log => {
+      :@mode => 'reset'
+  }
+  extensions [
+                 {
+                     :@enabled => 'true',
+                     :@className => 'winsw.Plugins.RunawayProcessKiller.RunawayProcessKillerExtension',
+                     :@id => 'killOnStartup',
+                     :pidfile => '%BASE%\pid.txt',
+                     :stopTimeout => 5000,
+                     :stopParentFirst => false,
+                 }
+             ]
 end
