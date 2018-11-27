@@ -5,21 +5,20 @@ class Chef
 
     default_action :install
 
-    property :name, kind_of: String, name_attribute: true
-    property :service_name, kind_of: String
-    property :windows_service_name, kind_of: String
-    property :service_description, kind_of: String
-    property :service_exec, kind_of: String
-    property :enabled, kind_of: [TrueClass, FalseClass], default: true
-    property :basedir, kind_of: String
-    property :executable, kind_of: String, required: true
-    property :args, kind_of: Array, default: []
-    property :env_variables, kind_of: Hash, default: {}
-    property :log_mode, kind_of: String, default: 'rotate'
-    property :options, kind_of: Hash, default: {}
-    property :extensions, kind_of: Array, default: []
-    property :supported_runtimes, kind_of: Array, default: %w( v2.0.50727 v4.0 )
-    property :winsw_bin_url, kind_of: String, default: 'https://github.com/kohsuke/winsw/releases/download/winsw-v2.1.2/WinSW.NET4.exe'
+    property :service_name, String
+    property :windows_service_name, String
+    property :service_description, String
+    property :service_exec, String
+    property :enabled, [TrueClass, FalseClass], default: true
+    property :basedir, String
+    property :executable, String, required: true
+    property :args, Array, default: []
+    property :env_variables, Hash, default: {}
+    property :log_mode, String, default: 'rotate'
+    property :options, Hash, default: {}
+    property :extensions, Array, default: []
+    property :supported_runtimes, Array, default: %w( v2.0.50727 v4.0 )
+    property :winsw_bin_url, String, default: 'https://github.com/kohsuke/winsw/releases/download/winsw-v2.1.2/WinSW.NET4.exe'
 
     def after_created
       service_name = instance_variable_get(:@service_name) || instance_variable_get(:@name)
