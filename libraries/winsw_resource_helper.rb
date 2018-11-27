@@ -12,7 +12,7 @@ module WinSW
       service_exec = new_resource.service_exec
       windows_service_name = new_resource.windows_service_name
       execute name do
-        command "net stop \"#{windows_service_name}\" stop"
+        command "net stop \"#{windows_service_name}\""
         only_if self.status_is(service_exec, :started)
       end
     end
