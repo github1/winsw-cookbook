@@ -6,7 +6,7 @@ module WinSW
       ChefSpec::Runner.new(step_into: ['winsw'], log_level: :debug) do |node|
         setup_node node
         block.call node unless block.nil?
-      end.converge('winsw::_winsw_spec_fixture')
+      end.converge('winsw::default')
     end
 
     def setup_node(node)

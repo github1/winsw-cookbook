@@ -10,6 +10,8 @@ node['winsw']['service'].each do |service_name, service_info|
     args service_info['args']
     env_variables service_info['env_variables']
     options service_info['options']
+    extensions service_info['extensions']
     supported_runtimes service_info['supported_runtimes']
+    winsw_bin_url service_info['winsw_bin_url']
   end
 end
