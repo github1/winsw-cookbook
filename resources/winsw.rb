@@ -39,18 +39,30 @@ class Chef
     end
 
     action :install do
+
       extend ::WinSW::ResourceHelper
 
-      service_name = new_resource.service_name
-      windows_service_name = new_resource.windows_service_name
-      service_base = new_resource.basedir
-      service_exec = new_resource.service_exec
-      service_descriptor_xml_path = new_resource.service_descriptor_xml_path
-
-      directory service_base do
-        recursive true
-        action :create
-      end
+      configuration_sets = {}
+      configuration_sets["#{new_resource.service_name}_test"] = {
+          :service_name => "#{new_resource.service_name}_test",
+          :windows_service_name => "#{new_resource.service_name}_test",
+          :service_base => "#{new_resource.basedir}/test".gsub('/', '\\'),
+          :service_exec => "#{new_resource.basedir}/test/test.exe".gsub('/', '\\'),
+          :service_descriptor_xml_path => "#{new_resource.basedir}/test/test.xml".gsub('/', '\\'),
+          :supported_runtime_config => ::File.join(new_resource.basedir, 'test/test.exe.config'),
+          :executable => 'whoami',
+          :test => true
+      }
+      configuration_sets[new_resource.service_name] = {
+          :service_name => new_resource.service_name,
+          :windows_service_name => new_resource.windows_service_name,
+          :service_base => new_resource.basedir,
+          :service_exec => new_resource.service_exec,
+          :service_descriptor_xml_path => new_resource.service_descriptor_xml_path,
+          :executable => new_resource.executable,
+          :supported_runtime_config => ::File.join(new_resource.basedir, "#{new_resource.service_name}.exe.config"),
+          :test => false
+      }
 
       powershell_script "#{new_resource.name} install .Net framework version 3.5" do
         code 'Install-WindowsFeature Net-Framework-Core'
@@ -59,60 +71,78 @@ class Chef
         }
       end
 
-      supported_runtime_config = ::File.join(service_base, "#{service_name}.exe.config")
-      if new_resource.supported_runtimes.empty?
-        file supported_runtime_config do
-          action :delete
+      configuration_sets.each do |key, config|
+
+        directory config[:service_base] do
+          recursive true
+          action :create
         end
-      else
-        template supported_runtime_config do
-          cookbook 'winsw'
-          source 'winsw.exe.config.erb'
-          variables({
-                        :supported_runtimes => new_resource.supported_runtimes
-                    })
+
+        if new_resource.supported_runtimes.empty?
+          file config[:supported_runtime_config] do
+            action :delete
+          end
+        else
+          template config[:supported_runtime_config] do
+            cookbook 'winsw'
+            source 'winsw.exe.config.erb'
+            variables({
+                          :supported_runtimes => new_resource.supported_runtimes
+                      })
+          end
         end
+
+        winsw_download_path = "#{Config[:file_cache_path]}\\#{::File.basename(new_resource.winsw_bin_url)}"
+        remote_file "#{key} download winsw" do
+          source new_resource.winsw_bin_url
+          path ::File.join(Config[:file_cache_path], ::File.basename(new_resource.winsw_bin_url))
+        end
+
+        execute "#{key} update executable" do
+          command "net stop \"#{config[:windows_service_name]}\" & Ver > nul & copy /B /Y #{winsw_download_path} #{config[:service_exec]}"
+          not_if "fc /B #{winsw_download_path} #{config[:service_exec]}"
+          notifies :run, "execute[#{key} restart re-configured service]", :immediately if new_resource.enabled && !config[:test]
+        end
+
+        file config[:service_descriptor_xml_path] do
+          content prepare_config_xml(
+                      config[:windows_service_name],
+                      new_resource.service_description,
+                      new_resource.env_variables,
+                      config[:executable],
+                      new_resource.args,
+                      new_resource.log_mode,
+                      new_resource.options,
+                      new_resource.extensions)
+          notifies :run, "execute[#{key} restart re-configured service]", :immediately if new_resource.enabled && !config[:test]
+        end
+
+        if config[:test]
+          file "#{config[:service_exec]}.bat" do
+            content %Q[@echo off
+#{config[:service_exec]} test
+if errorlevel 1 (
+  exit /b 0
+)]
+          end
+        else
+          execute "#{key} install" do
+            command "#{config[:service_exec]} install"
+            only_if status_is(config[:service_exec], :non_existent)
+          end
+
+          restart_resource = build_restart_resource "#{key} restart re-configured service"
+          restart_resource.action :nothing
+          restart_resource.only_if { new_resource.enabled }
+
+          start_resource = build_start_resource "#{key} start enabled service"
+          start_resource.only_if { new_resource.enabled }
+
+          stop_resource = build_stop_resource "#{key} stop disabled service"
+          stop_resource.not_if { new_resource.enabled }
+        end
+
       end
-
-      winsw_download_path = "#{Config[:file_cache_path]}\\#{::File.basename(new_resource.winsw_bin_url)}"
-      remote_file "#{new_resource.name} download winsw" do
-        source new_resource.winsw_bin_url
-        path ::File.join(Config[:file_cache_path], ::File.basename(new_resource.winsw_bin_url))
-      end
-
-      execute "#{new_resource.name} update executable" do
-        command "net stop \"#{windows_service_name}\" & Ver > nul & copy /B /Y #{winsw_download_path} #{service_exec}"
-        not_if "fc /B #{winsw_download_path} #{service_exec}"
-        notifies :run, "execute[#{new_resource.name} restart re-configured service]", :immediately if new_resource.enabled
-      end
-#
-      file service_descriptor_xml_path do
-        content prepare_config_xml(
-                    windows_service_name,
-                    new_resource.service_description,
-                    new_resource.env_variables,
-                    new_resource.executable,
-                    new_resource.args,
-                    new_resource.log_mode,
-                    new_resource.options,
-                    new_resource.extensions)
-        notifies :run, "execute[#{new_resource.name} restart re-configured service]", :immediately if new_resource.enabled
-      end
-
-      execute "#{new_resource.name} install" do
-        command "#{service_exec} install"
-        only_if status_is(service_exec, :non_existent)
-      end
-
-      restart_resource = build_restart_resource "#{new_resource.name} restart re-configured service"
-      restart_resource.action :nothing
-      restart_resource.only_if { new_resource.enabled }
-
-      start_resource = build_start_resource "#{new_resource.name} start enabled service"
-      start_resource.only_if { new_resource.enabled }
-
-      stop_resource = build_stop_resource "#{new_resource.name} stop disabled service"
-      stop_resource.not_if { new_resource.enabled }
 
     end
 
@@ -141,5 +171,14 @@ class Chef
       end
     end
 
+    action :test do
+      extend ::WinSW::ResourceHelper
+      service_exec = new_resource.service_exec
+      build_stop_resource "#{new_resource.name} stop"
+      execute "#{new_resource.name} test configuration" do
+        command "#{service_exec} test"
+        not_if status_is(service_exec, :non_existent)
+      end
+    end
   end
 end

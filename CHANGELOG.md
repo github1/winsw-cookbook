@@ -1,3 +1,7 @@
+# 2.0.2
+
+- Ensure WinSW configuration validation does not interfere with running service
+
 # 2.0.1
 
 - Check for existence of service descriptor xml before restarting
