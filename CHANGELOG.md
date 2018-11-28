@@ -1,3 +1,8 @@
+# 2.0.1
+
+- Check for existence of service descriptor xml before restarting
+- Remove executable wrapper bat
+
 # 2.0.0
 
 - Validate WinSW configuration on install/start/restart

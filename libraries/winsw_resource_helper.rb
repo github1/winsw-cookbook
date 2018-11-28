@@ -21,6 +21,7 @@ module WinSW
       service_exec = new_resource.service_exec
       execute name do
         command "set \"WINSW_SVC_EXECUTABLE=rem\" && #{service_exec} test && #{service_exec} restart"
+        only_if self.file_exists(new_resource.service_descriptor_xml_path)
         not_if self.status_is(service_exec, :non_existent)
       end
     end
@@ -37,6 +38,10 @@ module WinSW
                         status.to_s
                     end
       "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"#{status_text}\""
+    end
+
+    def file_exists(file)
+      "dir #{file} > nul 2>&1"
     end
 
     def hash_to_xml_s(in_value, format = false, parent_key = '', depth = -1)

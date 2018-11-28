@@ -9,6 +9,7 @@ class Chef
     property :windows_service_name, String
     property :service_description, String
     property :service_exec, String
+    property :service_descriptor_xml_path, String
     property :enabled, [TrueClass, FalseClass], default: true
     property :basedir, String
     property :executable, String, required: true
@@ -33,6 +34,8 @@ class Chef
       basedir = ::File.join((instance_variable_get(:@basedir) || "Config[:file_cache_path]}/#{service_name}"), service_name)
       instance_variable_set(:@basedir, basedir)
       instance_variable_set(:@service_exec, "#{basedir}/#{service_name}.exe".gsub('/', '\\'))
+
+      instance_variable_set(:@service_descriptor_xml_path, ::File.join(basedir, "#{service_name}.xml").gsub('/', '\\'))
     end
 
     action :install do
@@ -42,6 +45,7 @@ class Chef
       windows_service_name = new_resource.windows_service_name
       service_base = new_resource.basedir
       service_exec = new_resource.service_exec
+      service_descriptor_xml_path = new_resource.service_descriptor_xml_path
 
       directory service_base do
         recursive true
@@ -81,27 +85,13 @@ class Chef
         not_if "fc /B #{winsw_download_path} #{service_exec}"
         notifies :run, "execute[#{new_resource.name} restart re-configured service]", :immediately if new_resource.enabled
       end
-
-      file ::File.join(service_base, "#{service_name}.entrypoint.bat") do
-        content %Q[@echo off
-if "%WINSW_SVC_EXECUTABLE%"=="" (
-goto setentrypoint
-)
-goto :run
-:setentrypoint
-set "WINSW_SVC_EXECUTABLE=#{new_resource.executable}"
-:run
-echo Running %WINSW_SVC_EXECUTABLE%
-%WINSW_SVC_EXECUTABLE% %*]
-        notifies :run, "execute[#{new_resource.name} restart re-configured service]", :immediately if new_resource.enabled
-      end
-
-      file ::File.join(service_base, "#{service_name}.xml") do
+#
+      file service_descriptor_xml_path do
         content prepare_config_xml(
                     windows_service_name,
                     new_resource.service_description,
                     new_resource.env_variables,
-                    "%BASE%\\#{service_name}.entrypoint.bat",
+                    new_resource.executable,
                     new_resource.args,
                     new_resource.log_mode,
                     new_resource.options,

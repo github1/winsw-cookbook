@@ -46,6 +46,10 @@ module WinSW
     def the_winsw_binaries_match(service_name, result = true)
       stub_command("fc /B \\cachepath\\WinSW.NET4.exe \\winsw\\services\\#{service_name}\\#{service_name}.exe").and_return(result)
     end
+
+    def the_winsw_service_descriptor_xml_is_missing(service_name)
+      stub_command("dir \\winsw\\services\\#{service_name}\\#{service_name}.xml > nul 2>&1").and_return(false)
+    end
   end
 end
 
