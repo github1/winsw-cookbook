@@ -11,8 +11,11 @@ platforms:
       boot_timeout: 18000
       product_name: chef
       product_version: 12.6.0
+      vagrantfiles:
+        - Vagrantfile.rb
       customize:
         nictype1: 82540EM
+      provision: true
 suites:
   - name: default
     run_list:
