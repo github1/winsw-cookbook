@@ -1,3 +1,7 @@
+# 2.0.3
+
+- Re-order default supported_runtimes from highest to lowest versions
+
 # 2.0.2
 
 - Ensure WinSW configuration validation does not interfere with running service

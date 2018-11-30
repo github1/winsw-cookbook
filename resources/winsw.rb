@@ -18,7 +18,7 @@ class Chef
     property :log_mode, String, default: 'rotate'
     property :options, Hash, default: {}
     property :extensions, Array, default: []
-    property :supported_runtimes, Array, default: %w( v2.0.50727 v4.0 )
+    property :supported_runtimes, Array, default: %w( v4.0 v2.0.50727 )
     property :winsw_bin_url, String, default: 'https://github.com/kohsuke/winsw/releases/download/winsw-v2.1.2/WinSW.NET4.exe'
 
     def after_created
