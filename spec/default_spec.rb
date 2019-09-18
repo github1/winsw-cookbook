@@ -44,6 +44,25 @@ describe 'winsw resource' do
               .to notify('execute[test_service restart re-configured service]')
                       .to(:run).immediately
         end
+        it 'renders a test version of the winsw config file' do
+          expect(chef_run).to create_file('\\winsw\\services\\test_service\\test\\test.xml')
+          expect(chef_run).to render_file('\\winsw\\services\\test_service\\test\\test.xml').with_content(<<-EOT.strip)
+<service>
+ <id>test_service_test</id>
+ <name>test_service_test</name>
+ <description>$test_service</description>
+ <executable>whoami</executable>
+ <arguments>arg0 arg1</arguments>
+ <env name="env0" value="env0 val"/>
+ <stopparentprocessfirst>true</stopparentprocessfirst>
+ <logmode>rotate</logmode>
+ <logpath>%BASE%</logpath>
+</service>
+          EOT
+          expect(chef_run.file('\\winsw\\services\\test_service\\test\\\test.xml'))
+              .not_to notify('execute[test_service restart re-configured service]')
+                      .to(:run).immediately
+        end
         it 'is installed' do
           expect(chef_run).to run_execute('test_service install')
         end

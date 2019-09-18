@@ -104,7 +104,8 @@ module WinSW
                            arguments,
                            log_mode,
                            custom,
-                           extensions = [])
+                           extensions = [],
+                           is_test = false)
       service_element = {
           :id => service_name,
           :name => service_name,
@@ -120,6 +121,7 @@ module WinSW
       custom_opts.each do |key, value|
         service_element[key] = value
       end
+      service_element[:logpath] = '%BASE%' if is_test
       extensions.each_with_index do |entry, index|
         service_element[:extensions] = {} unless service_element.key?(:extensions)
         service_element[:extensions]["extension$$__#{index}"] = entry

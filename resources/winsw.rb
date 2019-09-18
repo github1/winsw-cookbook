@@ -113,7 +113,8 @@ class Chef
                       new_resource.args,
                       new_resource.log_mode,
                       new_resource.options,
-                      new_resource.extensions)
+                      new_resource.extensions,
+                      config[:test])
           notifies :run, "execute[#{key} restart re-configured service]", :immediately if new_resource.enabled && !config[:test]
         end
 
