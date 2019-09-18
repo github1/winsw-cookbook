@@ -27,6 +27,37 @@ describe 'WinSw::ResourceHelper' do
  <logmode>rotate</logmode>
 </service>])
     end
+    it 'renders custom array options' do
+      expect(helper.prepare_config_xml(
+          'a_service',
+          'a_service',
+          {
+              :FOO => 'bar',
+              :BAZ => 'quux'
+          },
+          'java.exe',
+          %w(Xmx 512m -Xms 128m -jar foo.jar),
+          'rotate',
+          {
+              :startargument_elements => %w(start0 start1),
+              :stopexecutable => 'stop.exe',
+              :stopargument_elements => %w(arg0 arg1)
+          })).to eq(%q[<service>
+ <id>a_service</id>
+ <name>a_service</name>
+ <description>a_service</description>
+ <executable>java.exe</executable>
+ <arguments>Xmx 512m -Xms 128m -jar foo.jar</arguments>
+ <env name="FOO" value="bar"/>
+ <env name="BAZ" value="quux"/>
+ <startargument>start0</startargument>
+ <startargument>start1</startargument>
+ <stopexecutable>stop.exe</stopexecutable>
+ <stopargument>arg0</stopargument>
+ <stopargument>arg1</stopargument>
+ <logmode>rotate</logmode>
+</service>])
+    end
     it 'renders log config' do
       expect(helper.prepare_config_xml(
           'a_service',
@@ -119,6 +150,16 @@ describe 'WinSw::ResourceHelper' do
     end
     it 'renders attributes' do
       expect(helper.hash_to_xml_s(:foo => {:@bar => 'baz'})).to eq('<foo bar="baz"/>')
+    end
+    it 'renders elements' do
+      expect(helper.hash_to_xml_s(:foo_elements =>  %w( arg0 arg1) )).to eq("<foo>arg0</foo>\n<foo>arg1</foo>")
+    end
+    it 'renders elements with empty array' do
+      expect(helper.hash_to_xml_s(:foo_elements => [] )).to eq("")
+    end
+    it 'renders elements nested' do
+      expect(helper.hash_to_xml_s(:foo => {:bar_elements => %w( arg0 arg1) } )).to eq("<foo>\n <bar>arg0</bar>\n <bar>arg1</bar>\n</foo>")
+      expect(helper.hash_to_xml_s(:foo => {:bar => {:baz_elements => %w( arg0 arg1) }} )).to eq("<foo>\n <bar>\n  <baz>arg0</baz>\n  <baz>arg1</baz>\n </bar>\n</foo>")
     end
   end
 end

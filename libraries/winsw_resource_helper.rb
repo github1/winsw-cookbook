@@ -80,9 +80,20 @@ module WinSW
           output = "#{output}#{spacing_end}#{parent_key_end}"
         end
       elsif in_value.is_a?(Array)
-        output = "#{parent_key_start}#{in_value
-                                           .map { |entry| hash_to_xml_s(entry, format, '', depth + 1) }
-                                           .join(' ')}#{parent_key_end}"
+        if in_value.empty?
+          return ''
+        end
+        if parent_key =~ /_elements$/
+          item_key = parent_key.gsub(/_elements$/, '')
+          output = "\n#{in_value
+                          .map { |entry| hash_to_xml_s({ "#{item_key}" => entry }, format, '', depth + 2) }
+                          .map { |entry| "#{spacing_start.gsub(/\n/,'')}#{entry}" }
+                          .join("\n")}"
+        else
+          output = "#{parent_key_start}#{in_value
+                                             .map { |entry| hash_to_xml_s(entry, format, '', depth + 1) }
+                                             .join(' ')}#{parent_key_end}"
+        end
       else
         output = "#{parent_key_start}#{in_value}#{parent_key_end}"
       end

@@ -72,6 +72,32 @@ describe 'winsw resource' do
         end
       end
 
+      describe 'startargs' do
+        describe 'if startargs are set' do
+          let(:chef_run) do
+            base_spec do |node|
+              node.default['winsw']['service']['test_service']['start_args'] = %w( start1 start2 )
+            end
+          end
+          it 'renders them' do
+            expect(chef_run).to render_file('\\winsw\\services\\test_service\\test_service.xml').with_content(<<-EOT.strip)
+<service>
+ <id>$test_service</id>
+ <name>$test_service</name>
+ <description>$test_service</description>
+ <executable>test.exe</executable>
+ <arguments>arg0 arg1</arguments>
+ <env name="env0" value="env0 val"/>
+ <stopparentprocessfirst>true</stopparentprocessfirst>
+ <startargument>start1</startargument>
+ <startargument>start2</startargument>
+ <logmode>rotate</logmode>
+</service>
+            EOT
+          end
+        end
+      end
+
       describe 'service already installed' do
         let(:chef_run) do
           base_spec

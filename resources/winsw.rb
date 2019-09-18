@@ -14,6 +14,9 @@ class Chef
     property :basedir, String
     property :executable, String, required: true
     property :args, Array, default: []
+    property :startargs, Array, default: []
+    property :stopexecutable, String
+    property :stopargs, Array, default: []
     property :env_variables, Hash, default: {}
     property :log_mode, String, default: 'rotate'
     property :options, Hash, default: {}
@@ -36,6 +39,12 @@ class Chef
       instance_variable_set(:@service_exec, "#{basedir}/#{service_name}.exe".gsub('/', '\\'))
 
       instance_variable_set(:@service_descriptor_xml_path, ::File.join(basedir, "#{service_name}.xml").gsub('/', '\\'))
+
+      options = instance_variable_get(:@options).to_h.clone
+      options[:startargument_elements] = instance_variable_get(:@startargs) || []
+      options[:stopexecutable] = instance_variable_get(:@stopexecutable) if instance_variable_get(:@stopexecutable)
+      options[:stopargument_elements] = instance_variable_get(:@stopargs) || []
+      instance_variable_set(:@options, options)
     end
 
     action :install do

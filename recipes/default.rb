@@ -8,6 +8,7 @@ node['winsw']['service'].each do |service_name, service_info|
     enabled service_info['enabled']
     executable service_info['executable']
     args service_info['args']
+    startargs service_info['start_args']
     env_variables service_info['env_variables']
     options service_info['options']
     extensions service_info['extensions']
