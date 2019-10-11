@@ -30,9 +30,9 @@ describe 'winsw resource' do
           expect(chef_run).to create_file('\\winsw\\services\\test_service\\test_service.xml')
           expect(chef_run).to render_file('\\winsw\\services\\test_service\\test_service.xml').with_content(<<-EOT.strip)
 <service>
- <id>$test_service</id>
- <name>$test_service</name>
- <description>$test_service</description>
+ <id>test_service</id>
+ <name>test_service</name>
+ <description>test_service</description>
  <executable>test.exe</executable>
  <arguments>arg0 arg1</arguments>
  <env name="env0" value="env0 val"/>
@@ -50,7 +50,7 @@ describe 'winsw resource' do
 <service>
  <id>test_service_test</id>
  <name>test_service_test</name>
- <description>$test_service</description>
+ <description>test_service</description>
  <executable>whoami</executable>
  <arguments>arg0 arg1</arguments>
  <env name="env0" value="env0 val"/>
@@ -82,9 +82,9 @@ describe 'winsw resource' do
           it 'renders them' do
             expect(chef_run).to render_file('\\winsw\\services\\test_service\\test_service.xml').with_content(<<-EOT.strip)
 <service>
- <id>$test_service</id>
- <name>$test_service</name>
- <description>$test_service</description>
+ <id>test_service</id>
+ <name>test_service</name>
+ <description>test_service</description>
  <executable>test.exe</executable>
  <arguments>arg0 arg1</arguments>
  <env name="env0" value="env0 val"/>

@@ -1,3 +1,7 @@
+# 3.0.0
+
+- Update to to Chef 15.x
+
 # 2.0.3
 
 - Re-order default supported_runtimes from highest to lowest versions

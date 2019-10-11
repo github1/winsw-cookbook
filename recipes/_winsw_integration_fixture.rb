@@ -1,3 +1,8 @@
+# workaround for https://github.com/test-kitchen/busser/issues/25
+windows_package 'ruby' do
+  source 'https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-2.4.9-1/rubyinstaller-devkit-2.4.9-1-x64.exe'
+end
+
 remote_file '/openjdk.zip' do
   source 'https://bitbucket.org/alexkasko/openjdk-unofficial-builds/downloads/openjdk-1.7.0-u60-unofficial-windows-i586-image.zip'
   action :create_if_missing

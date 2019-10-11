@@ -10,7 +10,7 @@ platforms:
       vm_hostname: win2012r2
       boot_timeout: 18000
       product_name: chef
-      product_version: 12.6.0
+      require_chef_omnibus: 15.3.14
       vagrantfiles:
         - Vagrantfile.rb
       customize:

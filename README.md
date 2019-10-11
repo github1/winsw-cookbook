@@ -15,7 +15,7 @@ A basic `winsw` resource can be configured as follows:
 ```ruby
 winsw 'my_winsw_service' do
   executable 'java'
-  args [ '-jar', 'C:\\SomeService.jar' ]
+  args %w(-jar C:\\SomeService.jar)
 end
 ```
 
@@ -69,7 +69,7 @@ directly into <tag> elements and keys prefixed with `@` are treated as attribute
 ```ruby
 winsw 'my_winsw_service' do
   executable 'java'
-  args [ '-jar', 'C:\\SomeService.jar' ]
+  args %w(-jar C:\\SomeService.jar)
   options :log => {
     :@mode => 'rotate'
   }
@@ -94,7 +94,7 @@ An array of extensions to add to the configuration.
 ```ruby
 winsw 'my_winsw_service' do
   executable 'java'
-  args [ '-jar', 'C:\\SomeService.jar' ]
+  args %w(-jar C:\\SomeService.jar)
   extensions [{
                :@enabled => 'true',
                :@className => 'winsw.Plugins.RunawayProcessKiller.RunawayProcessKillerExtension',
