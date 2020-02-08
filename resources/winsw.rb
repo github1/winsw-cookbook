@@ -16,6 +16,7 @@ property :enabled, [TrueClass, FalseClass], default: true
 property :basedir, String
 property :executable, String, required: true
 property :args, Array, default: []
+property :startmode, String
 property :startargs, Array, default: []
 property :stopexecutable, String
 property :stopargs, Array, default: []
@@ -43,6 +44,7 @@ def after_created
   instance_variable_set(:@service_descriptor_xml_path, ::File.join(basedir, "#{service_name}.xml").gsub('/', '\\'))
 
   options = instance_variable_get(:@options).to_h.clone
+  options[:startmode] = instance_variable_get(:@startmode) if instance_variable_get(:@startmode)
   options[:startargument_elements] = instance_variable_get(:@startargs) || []
   options[:stopexecutable] = instance_variable_get(:@stopexecutable) if instance_variable_get(:@stopexecutable)
   options[:stopargument_elements] = instance_variable_get(:@stopargs) || []
@@ -50,6 +52,7 @@ def after_created
 end
 
 action :install do
+  extend ::WinSW::ResourceHelper
 
   configuration_sets = {}
   configuration_sets["#{new_resource.service_name}_test"] = {
@@ -110,8 +113,13 @@ action :install do
     execute "#{key} update executable" do
       command "net stop \"#{config[:windows_service_name]}\" & Ver > nul & copy /B /Y #{winsw_download_path} #{config[:service_exec]}"
       not_if "fc /B #{winsw_download_path} #{config[:service_exec]}"
-      notifies :run, "execute[#{key} restart re-configured service]", :immediately if new_resource.enabled && !config[:test]
+      # stop the service if the binary changed, it will get started at the end of the resource if enabled
+      notifies :run, "execute[#{key} stop re-configured service]", :immediately if !config[:test]
     end
+
+    new_resource.options[:startmode] = 'Manual' unless new_resource.enabled
+    current_service_xml = parse_service_xml_from_file(config[:service_descriptor_xml_path])
+    reinstall_required = current_service_xml ? current_service_xml[:startmode] != new_resource.options[:startmode] : false
 
     file config[:service_descriptor_xml_path] do
       content prepare_config_xml(
@@ -124,7 +132,13 @@ action :install do
           new_resource.options,
           new_resource.extensions,
           config[:test])
-      notifies :run, "execute[#{key} restart re-configured service]", :immediately if new_resource.enabled && !config[:test]
+      notifies :run, "execute[#{key} restart re-configured service]", :immediately if new_resource.enabled && !config[:test] && !reinstall_required
+    end
+
+    # the configuration changed in a way that requires re-installation
+    execute "#{key} uninstall re-configured service" do
+      command "#{config[:service_exec]} stop > NUL 2>&1 & #{config[:service_exec]} uninstall"
+      only_if { reinstall_required && !status_is(config[:service_exec], :non_existent) }
     end
 
     if config[:test]
@@ -138,12 +152,15 @@ if errorlevel 1 (
     else
       execute "#{key} install" do
         command "#{config[:service_exec]} install"
-        only_if status_is(config[:service_exec], :non_existent)
+        only_if { status_is(config[:service_exec], :non_existent) }
       end
 
       restart_resource = build_restart_resource "#{key} restart re-configured service"
       restart_resource.action :nothing
       restart_resource.only_if { new_resource.enabled }
+
+      restart_resource = build_stop_resource "#{key} stop re-configured service"
+      restart_resource.action :nothing
 
       start_resource = build_start_resource "#{key} start enabled service"
       start_resource.only_if { new_resource.enabled }
@@ -177,7 +194,7 @@ action :uninstall do
   build_stop_resource "#{new_resource.name} stop"
   execute "#{new_resource.name} uninstall" do
     command "#{service_exec} uninstall"
-    not_if status_is(service_exec, :non_existent)
+    not_if { status_is(service_exec, :non_existent) }
   end
 end
 
@@ -187,6 +204,6 @@ action :test do
   build_stop_resource "#{new_resource.name} stop"
   execute "#{new_resource.name} test configuration" do
     command "#{service_exec} test"
-    not_if status_is(service_exec, :non_existent)
+    not_if { status_is(service_exec, :non_existent) }
   end
 end

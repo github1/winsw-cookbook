@@ -23,7 +23,7 @@ describe 'winsw resource' do
         it 'updates the winsw executable' do
           expect(chef_run).to run_execute('test_service update executable')
           expect(chef_run.execute('test_service update executable'))
-              .to notify('execute[test_service restart re-configured service]')
+              .to notify('execute[test_service stop re-configured service]')
                       .to(:run).immediately
         end
         it 'renders the winsw config file' do
@@ -98,6 +98,26 @@ describe 'winsw resource' do
         end
       end
 
+      describe 'startmode' do
+        describe 'if startmode is changed' do
+          let(:chef_run) do
+            base_spec do |node|
+              node.default['winsw']['service']['test_service']['startmode'] = 'Manual'
+            end
+          end
+          before do
+            the_service_exists('test_service')
+            the_service_is('test_service', :started)
+            with_existing_config({
+              :startmode => 'Automatic'
+            })
+          end
+          it 're-installs the service' do
+            expect(chef_run).to run_execute('test_service uninstall re-configured service')
+          end
+        end
+      end
+
       describe 'service already installed' do
         let(:chef_run) do
           base_spec
@@ -131,9 +151,9 @@ describe 'winsw resource' do
           node.default['winsw']['service']['test_service']['enabled'] = false
         end
       end
-      it 'does not trigger restarts on configuration changes' do
+      it 'can stop the disabled service on configuration changes' do
         expect(chef_run.execute('test_service update executable'))
-            .not_to notify('execute[test_service restart re-configured service]')
+            .to notify('execute[test_service stop re-configured service]')
                         .to(:run).immediately
         expect(chef_run.file('\\winsw\\services\\test_service\\test_service.xml'))
             .not_to notify('execute[test_service restart re-configured service]')

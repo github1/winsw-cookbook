@@ -6,7 +6,7 @@ provisioner:
 platforms:
   - name: win2012r2
     driver:
-      box: eval-win2012r2-standard-chef
+      box: eval-win2012r2-standard-chef15
       vm_hostname: win2012r2
       boot_timeout: 18000
       product_name: chef

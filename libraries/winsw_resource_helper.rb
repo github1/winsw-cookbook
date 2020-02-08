@@ -1,3 +1,5 @@
+require 'mixlib/shellout'
+require 'nokogiri'
 module WinSW
   module ResourceHelper
     def build_start_resource(name)
@@ -5,7 +7,7 @@ module WinSW
       service_test_exec = "#{new_resource.basedir}/test/test.exe.bat".gsub('/', '\\')
       execute name do
         command "#{service_test_exec} && #{service_exec} start"
-        only_if self.status_is(service_exec, :stopped)
+        only_if { self.status_is(service_exec, :stopped) }
       end
     end
 
@@ -14,7 +16,7 @@ module WinSW
       windows_service_name = new_resource.windows_service_name
       execute name do
         command "net stop \"#{windows_service_name}\""
-        only_if self.status_is(service_exec, :started)
+        only_if { self.status_is(service_exec, :started) }
       end
     end
 
@@ -24,7 +26,7 @@ module WinSW
       execute name do
         command "#{service_test_exec} && #{service_exec} restart"
         only_if self.file_exists(new_resource.service_descriptor_xml_path)
-        not_if self.status_is(service_exec, :non_existent)
+        not_if { self.status_is(service_exec, :non_existent) }
       end
     end
 
@@ -39,7 +41,12 @@ module WinSW
                       else
                         status.to_s
                     end
-      "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"#{status_text}\""
+      script = "#{service_exec} status | %systemroot%\\system32\\find.exe /i \"#{status_text}\""
+      cmd = Mixlib::ShellOut.new(script)
+      cmd.run_command
+      command_log_msg_detail = "#{script} #{[cmd.stdout, cmd.stderr].compact.join(' ')}"
+      puts "[exit: #{cmd.status.exitstatus}] #{command_log_msg_detail}"
+      cmd.status.exitstatus == 0
     end
 
     def file_exists(file)
@@ -140,6 +147,21 @@ module WinSW
       hash_to_xml_s({
                         :service => service_element
                     })
+    end
+
+    def parse_service_xml_from_file(xml_path)
+      self.parse_service_xml(::File.file?(xml_path) ? ::File.read(xml_path) : '<empty/>')
+    end
+
+    def parse_service_xml(xml_s)
+      get_text = Proc.new {|doc, xpath|
+        node = doc.at_xpath(xpath)
+        node ? node.text : nil
+      }
+      doc = Nokogiri::XML(xml_s)
+      {
+        :startmode => get_text.call(doc, '//startmode')
+      }
     end
   end
 end

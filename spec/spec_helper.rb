@@ -1,4 +1,5 @@
 require 'chefspec'
+require_relative '../libraries/winsw_resource_helper.rb'
 
 module WinSW
   module BaseSpec
@@ -27,16 +28,8 @@ module WinSW
     end
 
     def the_service_is(service_name, status, state = true)
-      status_text = case status
-                      when :non_existent then
-                        'NonExistent'
-                      when :stopped then
-                        'Stopped'
-                      when :started then
-                        'Started'
-                    end
-      stub_command(/\.exe status \|/).and_return(false)
-      stub_command("\\winsw\\services\\#{service_name}\\#{service_name}.exe status | %systemroot%\\system32\\find.exe /i \"#{status_text}\"").and_return(state)
+      allow_any_instance_of(::Chef::Resource).to receive(:status_is).and_return(false)
+      allow_any_instance_of(::Chef::Resource).to receive(:status_is).with(Regexp.new(Regexp.escape(service_name)), status).and_return(state)
     end
 
     def the_service_is_not(service_name, status)
@@ -49,6 +42,10 @@ module WinSW
 
     def the_winsw_service_descriptor_xml_is_missing(service_name)
       stub_command("dir \\winsw\\services\\#{service_name}\\#{service_name}.xml > nul 2>&1").and_return(false)
+    end
+
+    def with_existing_config(h)
+      allow_any_instance_of(::Chef::Resource).to receive(:parse_service_xml_from_file).and_return(h)
     end
   end
 end

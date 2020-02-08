@@ -155,11 +155,19 @@ describe 'WinSw::ResourceHelper' do
       expect(helper.hash_to_xml_s(:foo_elements =>  %w( arg0 arg1) )).to eq("<foo>arg0</foo>\n<foo>arg1</foo>")
     end
     it 'renders elements with empty array' do
-      expect(helper.hash_to_xml_s(:foo_elements => [] )).to eq("")
+      expect(helper.hash_to_xml_s(:foo_elements => [] )).to eq('')
     end
     it 'renders elements nested' do
       expect(helper.hash_to_xml_s(:foo => {:bar_elements => %w( arg0 arg1) } )).to eq("<foo>\n <bar>arg0</bar>\n <bar>arg1</bar>\n</foo>")
       expect(helper.hash_to_xml_s(:foo => {:bar => {:baz_elements => %w( arg0 arg1) }} )).to eq("<foo>\n <bar>\n  <baz>arg0</baz>\n  <baz>arg1</baz>\n </bar>\n</foo>")
+    end
+  end
+  describe 'parse_service_xml' do
+    it 'extracts the startmode' do
+      h = helper.parse_service_xml('<service><id>a_service</id><startmode>Manual</startmode></service>')
+      expect(h[:startmode]).to eq('Manual')
+      h = helper.parse_service_xml('<service><id>a_service</id></service>')
+      expect(h[:startmode]).to be_nil
     end
   end
 end

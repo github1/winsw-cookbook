@@ -1,3 +1,8 @@
+# 3.1.0
+
+- Evaluate service status guard conditions lazily
+- Re-install service if `startmode` is changed
+
 # 3.0.0
 
 - Update to to Chef 15.x
