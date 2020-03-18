@@ -25,7 +25,7 @@ property :log_mode, String, default: 'rotate'
 property :options, Hash, default: {}
 property :extensions, Array, default: []
 property :supported_runtimes, Array, default: %w( v4.0 v2.0.50727 )
-property :winsw_bin_url, String, default: 'https://github.com/kohsuke/winsw/releases/download/winsw-v2.1.2/WinSW.NET4.exe'
+property :winsw_bin_url, String, default: 'https://github.com/kohsuke/winsw/releases/download/winsw-v2.6.2/WinSW.NET4.exe'
 
 def after_created
   service_name = instance_variable_get(:@service_name) || instance_variable_get(:@name)

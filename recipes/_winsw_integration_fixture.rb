@@ -27,7 +27,6 @@ end
 
 winsw 'my_service' do
   basedir 'C:/service'
-  winsw_bin_url 'https://github.com/kohsuke/winsw/releases/download/winsw-v2.1.2/WinSW.NET4.exe'
   executable 'C:\\openjdk\\openjdk-1.7.0-u60-unofficial-windows-i586-image\\bin\\java'
   args %w( -Xrs -jar C:\\SimpleWebServer.jar )
   options :log => {

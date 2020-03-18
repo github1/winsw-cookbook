@@ -1,3 +1,7 @@
+# 3.1.1
+
+- Update default winsw version to winsw-v2.6.2
+
 # 3.1.0
 
 - Evaluate service status guard conditions lazily
