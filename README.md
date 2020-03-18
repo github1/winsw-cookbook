@@ -24,19 +24,19 @@ end
 The resource properties generally correspond with configuration options defined
 in the WinSW XML Configuration File described [here](https://github.com/kohsuke/winsw/blob/master/doc/xmlConfigFile.md).
 
-###`args`
+### `args`
 An array of arguments to pass to the executable.
-###`basedir`
+### `basedir`
 The directory to write the service configuration to. Defaults to `:file_cache_path`.
-###`enabled`
+### `enabled`
 If set to `false`, the service will be installed but it
 will not be started. If the service is started before the converge, it will be stopped.
-###`env_variables`
+### `env_variables`
 A hash of key value pairs which are set as environment variables to the service
 process.
-###`executable`
+### `executable`
 The path to the executable to run for the service.
-###`extensions`
+### `extensions`
 A array of extension configurations.
 ```ruby
 winsw 'my_winsw_service' do
@@ -64,9 +64,9 @@ end
  </extensions>
 </service>
 ```
-###`log_mode`
+### `log_mode`
 Sets the `logmode` configuration option.
-###`options`
+### `options`
 A hash of values to set in the configuration. These may override any of the 
 properties which are set directly on the resource. The hash is translated into XML. 
 Regular hash keys are translated directly into <tag> elements and keys prefixed 
@@ -87,23 +87,23 @@ end
  <log mode="rotate"/>
 </service>
 ```
-###`service_description`
+### `service_description`
 The description used when registering the Windows service. Defaults to `windows_serviceName`.
-###`service_name`
+### `service_name`
 The name of the service.
-###`startargs`
+### `startargs`
 An array of arguments to pass when starting the service.
-###`startmode`
+### `startmode`
 The windows service start mode / startup type - e.g. (Automatic, Manual, Disabled)
-###`stopargs`
+### `stopargs`
 An array of arguments to pass when stopping the service.
-###`stopexecutable`
+### `stopexecutable`
 The path to the executable to run for stopping the service (optional).
-###`supported_runtimes`
+### `supported_runtimes`
 An array of .NET runtime versions which are set in the [WinSW EXE Configuration File](https://github.com/kohsuke/winsw/blob/master/doc/exeConfigFile.md).
-###`windows_service_name`
+### `windows_service_name`
 The name used when registering the Windows service (i.e. the name of the service displayed in services.msc). Defaults to `$#{new_resource.name || new_resource.service_name}`.
-###`winsw_bin_url`
+### `winsw_bin_url`
 The url for `winsw.exe` to download.
 
 ## Contribute
