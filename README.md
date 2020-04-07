@@ -1,5 +1,5 @@
 # winsw-cookbook
-This cookbook provides a custom Chef resource which configures Windows services using [kohsuke/winsw][winsw].
+This cookbook provides a custom Chef resource which configures Windows services using [winsw][winsw].
 
 ## Installation
 
@@ -22,7 +22,7 @@ end
 ## Properties
 
 The resource properties generally correspond with configuration options defined
-in the WinSW XML Configuration File described [here](https://github.com/kohsuke/winsw/blob/master/doc/xmlConfigFile.md).
+in the WinSW XML Configuration File described [here](https://github.com/winsw/winsw/blob/master/doc/xmlConfigFile.md).
 
 ### `args`
 An array of arguments to pass to the executable.
@@ -100,7 +100,7 @@ An array of arguments to pass when stopping the service.
 ### `stopexecutable`
 The path to the executable to run for stopping the service (optional).
 ### `supported_runtimes`
-An array of .NET runtime versions which are set in the [WinSW EXE Configuration File](https://github.com/kohsuke/winsw/blob/master/doc/exeConfigFile.md).
+An array of .NET runtime versions which are set in the [WinSW EXE Configuration File](https://github.com/winsw/winsw/blob/master/doc/exeConfigFile.md).
 ### `windows_service_name`
 The name used when registering the Windows service (i.e. the name of the service displayed in services.msc). Defaults to `$#{new_resource.name || new_resource.service_name}`.
 ### `winsw_bin_url`
@@ -121,5 +121,5 @@ The url for `winsw.exe` to download.
 [github1]:      https://github.com/github1
 [repo]:         https://github.com/github1/winsw-cookbook
 [issues]:       https://github.com/github1/winsw-cookbook/issues
-[winsw]:        https://github.com/kohsuke/winsw
+[winsw]:        https://github.com/winsw/winsw
 [berkshelf]:    https://docs.chef.io/berkshelf.html
