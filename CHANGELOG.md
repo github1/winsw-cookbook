@@ -1,3 +1,7 @@
+# 3.1.2
+
+- Update winsw download url to winsw org
+
 # 3.1.1
 
 - Update default winsw version to winsw-v2.6.2
