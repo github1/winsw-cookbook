@@ -136,6 +136,7 @@ module WinSW
       end
       custom_opts = custom.to_h.clone
       custom_opts[:logmode] = log_mode unless custom.key?(:log) || custom.key?(:logmode)
+      custom_opts[:logmode] = 'reset' if is_test
       custom_opts.each do |key, value|
         service_element[key] = value
       end

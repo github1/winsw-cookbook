@@ -114,7 +114,7 @@ action :install do
       command "net stop \"#{config[:windows_service_name]}\" & Ver > nul & copy /B /Y #{winsw_download_path} #{config[:service_exec]}"
       not_if "fc /B #{winsw_download_path} #{config[:service_exec]}"
       # stop the service if the binary changed, it will get started at the end of the resource if enabled
-      notifies :run, "execute[#{key} stop re-configured service]", :immediately if !config[:test]
+      notifies :run, "execute[#{key} stop re-configured service]", :immediately unless config[:test]
     end
 
     new_resource.options[:startmode] = 'Manual' unless new_resource.enabled
@@ -142,6 +142,7 @@ action :install do
     end
 
     if config[:test]
+      # if error level is other than 0 or 1, there is something wrong with the config
       file "#{config[:service_exec]}.bat" do
         content %Q[@echo off
 #{config[:service_exec]} test

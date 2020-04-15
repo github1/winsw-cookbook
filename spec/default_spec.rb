@@ -55,7 +55,7 @@ describe 'winsw resource' do
  <arguments>arg0 arg1</arguments>
  <env name="env0" value="env0 val"/>
  <stopparentprocessfirst>true</stopparentprocessfirst>
- <logmode>rotate</logmode>
+ <logmode>reset</logmode>
  <logpath>%BASE%</logpath>
 </service>
           EOT

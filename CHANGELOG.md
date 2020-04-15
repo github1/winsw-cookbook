@@ -1,3 +1,7 @@
+# 3.1.3
+
+- Use `logmode` of `reset` for test configuration
+
 # 3.1.2
 
 - Update winsw download url to winsw org
