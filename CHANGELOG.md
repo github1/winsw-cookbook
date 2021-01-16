@@ -1,3 +1,7 @@
+# 3.1.4
+
+- Ensure `winsw_download_path` is a valid windows path
+
 # 3.1.3
 
 - Use `logmode` of `reset` for test configuration

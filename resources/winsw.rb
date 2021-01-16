@@ -104,7 +104,7 @@ action :install do
       end
     end
 
-    winsw_download_path = "#{Config[:file_cache_path]}\\#{::File.basename(new_resource.winsw_bin_url)}"
+    winsw_download_path = "#{Config[:file_cache_path]}\\#{::File.basename(new_resource.winsw_bin_url)}".gsub('/', '\\')
     remote_file "#{key} download winsw" do
       source new_resource.winsw_bin_url
       path ::File.join(Config[:file_cache_path], ::File.basename(new_resource.winsw_bin_url))
