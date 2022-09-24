@@ -155,8 +155,8 @@ action :install do
       file "#{config[:service_exec]}.bat" do
         content %Q[@echo off
 #{config[:service_exec]} test
-if errorlevel 1 (
-  exit /b 0
+if not errorlevel 0 (
+  exit 1
 )]
       end
     else

@@ -1,3 +1,7 @@
+# 3.1.6
+
+- Ensure test.exe.bat failures cause chef run to fail
+
 # 3.1.5
 
 - Update default winsw version to winsw-v2.11.0
