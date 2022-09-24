@@ -1,5 +1,5 @@
 # winsw-cookbook
-This cookbook provides a custom Chef resource which configures Windows services using [winsw][winsw].
+This cookbook provides a custom Chef resource which configures Windows services using [WinSW][winsw].
 
 ## Installation
 
@@ -21,8 +21,7 @@ end
 
 ## Properties
 
-The resource properties generally correspond with configuration options defined
-in the WinSW XML Configuration File described [here](https://github.com/winsw/winsw/blob/master/doc/xmlConfigFile.md).
+The resource properties generally correspond with configuration options defined in the WinSW XML configuration file described [here](https://github.com/winsw/winsw/releases/download/v2.11.0/sample-allOptions.xml).
 
 ### `args`
 An array of arguments to pass to the executable.
@@ -52,6 +51,7 @@ winsw 'my_winsw_service' do
             }]
 end
 ```
+_The above would be rendered as:_
 ```xml
 <service>
  ...
@@ -94,7 +94,7 @@ The name of the service.
 ### `startargs`
 An array of arguments to pass when starting the service.
 ### `startmode`
-The windows service start mode / startup type - e.g. (Automatic, Manual, Disabled)
+The Windows service start mode / startup type - e.g. (Automatic, Manual, Disabled)
 ### `stopargs`
 An array of arguments to pass when stopping the service.
 ### `stopexecutable`
@@ -104,7 +104,7 @@ An array of .NET runtime versions which are set in the [WinSW EXE Configuration 
 ### `windows_service_name`
 The name used when registering the Windows service (i.e. the name of the service displayed in services.msc). Defaults to `$#{new_resource.name || new_resource.service_name}`.
 ### `winsw_bin_url`
-The url for `winsw.exe` to download.
+The WinSW exe url.
 
 ## Contribute
 

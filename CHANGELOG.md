@@ -1,3 +1,7 @@
+# 3.1.5
+
+- Update default winsw version to winsw-v2.11.0
+
 # 3.1.4
 
 - Ensure `winsw_download_path` is a valid windows path

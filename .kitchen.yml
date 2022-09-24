@@ -1,21 +1,18 @@
 ---
 driver:
-  name: vagrant
+  name: ec2
+  associate_public_ip: true
 provisioner:
   name: chef_zero
+  chef_license: accept
+  log_level: <%= ENV['LOG_LEVEL'] || 'info' %>
+transport:
+  connection_timeout: 10
+  connection_retries: 5
 platforms:
-  - name: win2012r2
+  - name: windows-2019
     driver:
-      box: eval-win2012r2-standard-chef15
-      vm_hostname: win2012r2
-      boot_timeout: 18000
-      product_name: chef
-      require_chef_omnibus: 15.3.14
-      vagrantfiles:
-        - Vagrantfile.rb
-      customize:
-        nictype1: 82540EM
-      provision: true
+      require_chef_omnibus: '17.9.26'
 suites:
   - name: default
     run_list:

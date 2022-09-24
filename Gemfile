@@ -8,5 +8,5 @@ gem 'guard-foodcritic', '3.0.0'
 
 group :integration do
   gem 'test-kitchen', '2.3.2'
-  gem 'kitchen-vagrant', '1.6.0'
+  gem 'kitchen-ec2', '3.13.0'
 end

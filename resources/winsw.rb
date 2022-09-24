@@ -1,3 +1,5 @@
+unified_mode false
+
 resource_name :winsw
 provides :winsw
 
@@ -25,7 +27,7 @@ property :log_mode, String, default: 'rotate'
 property :options, Hash, default: {}
 property :extensions, Array, default: []
 property :supported_runtimes, Array, default: %w( v4.0 v2.0.50727 )
-property :winsw_bin_url, String, default: 'https://github.com/winsw/winsw/releases/download/v2.6.2/WinSW.NET4.exe'
+property :winsw_bin_url, String, default: 'https://github.com/winsw/winsw/releases/download/v2.11.0/WinSW-x64.exe'
 
 def after_created
   service_name = instance_variable_get(:@service_name) || instance_variable_get(:@name)
@@ -54,6 +56,8 @@ end
 action :install do
   extend ::WinSW::ResourceHelper
 
+  requires_dot_net_runtime = new_resource.winsw_bin_url =~ /.*\.NET[0-9]+\.exe$/
+
   configuration_sets = {}
   configuration_sets["#{new_resource.service_name}_test"] = {
       :service_name => "#{new_resource.service_name}_test",
@@ -79,7 +83,12 @@ action :install do
   powershell_script "#{new_resource.name} install .Net framework version 3.5" do
     code 'Install-WindowsFeature Net-Framework-Core'
     only_if {
-      new_resource.supported_runtimes.empty? || (new_resource.supported_runtimes.size == 1 && new_resource.supported_runtimes.include?('v2.0.50727'))
+      requires_dot_net_runtime && (
+        new_resource.supported_runtimes.empty? || (
+            new_resource.supported_runtimes.size == 1 &&
+                new_resource.supported_runtimes.include?('v2.0.50727')
+        )
+      )
     }
   end
 
@@ -90,7 +99,7 @@ action :install do
       action :create
     end
 
-    if new_resource.supported_runtimes.empty?
+    if !requires_dot_net_runtime || new_resource.supported_runtimes.empty?
       file config[:supported_runtime_config] do
         action :delete
       end

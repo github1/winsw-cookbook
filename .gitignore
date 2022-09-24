@@ -3,9 +3,9 @@ Berksfile.lock
 .vagrant
 .bundle/
 tmp/
-.vagrant
 .kitchen/
 .project
 .idea
 *.iml
 .ruby-version
+*.rdp

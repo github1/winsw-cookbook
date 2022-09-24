@@ -132,10 +132,11 @@ describe 'winsw resource' do
       end
 
       describe '.Net 3.5 runtime enablement' do
-        describe 'if v2.0.50727 is the only supported runtime' do
+        describe 'if v2.0.50727 is the only supported runtime and .NET build of winsw is used' do
           let(:chef_run) do
             base_spec do |node|
               node.default['winsw']['service']['test_service']['supported_runtimes'] = %w( v2.0.50727 )
+              node.default['winsw']['service']['test_service']['winsw_bin_url'] = 'https://github.com/winsw/winsw/releases/download/v2.11.0/WinSW.NET2.exe'
             end
           end
           it 'enables .Net 3.5 runtime' do

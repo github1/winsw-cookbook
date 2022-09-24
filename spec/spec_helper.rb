@@ -37,7 +37,7 @@ module WinSW
     end
 
     def the_winsw_binaries_match(service_name, result = true)
-      stub_command("fc /B \\cachepath\\WinSW.NET4.exe \\winsw\\services\\#{service_name}\\#{service_name}.exe").and_return(result)
+      stub_command("fc /B \\cachepath\\WinSW-x64.exe \\winsw\\services\\#{service_name}\\#{service_name}.exe").and_return(result)
     end
 
     def the_winsw_service_descriptor_xml_is_missing(service_name)
@@ -54,5 +54,5 @@ RSpec.configure do |config|
   config.include WinSW::BaseSpec
   config.platform = 'windows'
   config.version = '2012R2'
-  config.file_cache_path = '\\cachepath'
+  config.file_cache_path = '/cachepath'
 end

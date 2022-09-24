@@ -1,7 +1,7 @@
 # workaround for https://github.com/test-kitchen/busser/issues/25
-windows_package 'ruby' do
-  source 'https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-2.4.9-1/rubyinstaller-devkit-2.4.9-1-x64.exe'
-end
+# windows_package 'ruby' do
+#   source 'https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-2.4.9-1/rubyinstaller-devkit-2.4.9-1-x64.exe'
+# end
 
 remote_file '/openjdk.zip' do
   source 'https://bitbucket.org/alexkasko/openjdk-unofficial-builds/downloads/openjdk-1.7.0-u60-unofficial-windows-i586-image.zip'
@@ -31,15 +31,8 @@ winsw 'my_service' do
   args %w( -Xrs -jar C:\\SimpleWebServer.jar )
   options :log => {
       :@mode => 'reset'
-  }
-  extensions [
-                 {
-                     :@enabled => 'true',
-                     :@className => 'winsw.Plugins.RunawayProcessKiller.RunawayProcessKillerExtension',
-                     :@id => 'killOnStartup',
-                     :pidfile => '%BASE%\pid.txt',
-                     :stopTimeout => 5000,
-                     :stopParentFirst => false,
-                 }
-             ]
+  },
+  :pidfile => '%BASE%\pid.txt',
+  :stopTimeout => 5000,
+  :stopParentProcessFirst => false
 end
