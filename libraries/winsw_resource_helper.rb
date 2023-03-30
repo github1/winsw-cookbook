@@ -4,27 +4,24 @@ module WinSW
   module ResourceHelper
     def build_start_resource(name)
       service_exec = new_resource.service_exec
-      service_test_exec = "#{new_resource.basedir}/test/test.exe.bat".gsub('/', '\\')
       execute name do
-        command "#{service_test_exec} && #{service_exec} start"
+        command "#{service_exec} start"
         only_if { self.status_is(service_exec, :stopped) }
       end
     end
 
     def build_stop_resource(name)
       service_exec = new_resource.service_exec
-      windows_service_name = new_resource.windows_service_name
       execute name do
-        command "net stop \"#{windows_service_name}\""
+        command "#{service_exec} stopwait"
         only_if { self.status_is(service_exec, :started) }
       end
     end
 
     def build_restart_resource(name)
       service_exec = new_resource.service_exec
-      service_test_exec = "#{new_resource.basedir}/test/test.exe.bat".gsub('/', '\\')
       execute name do
-        command "#{service_test_exec} && #{service_exec} restart"
+        command "#{service_exec} restart"
         only_if self.file_exists(new_resource.service_descriptor_xml_path)
         not_if { self.status_is(service_exec, :non_existent) }
       end
@@ -122,12 +119,11 @@ module WinSW
                            arguments,
                            log_mode,
                            custom,
-                           extensions = [],
-                           is_test = false)
+                           extensions = [])
       service_element = {
-          :id => service_name,
-          :name => service_name,
-          :description => service_description,
+        :id => service_name,
+        :name => service_name,
+        :description => service_description,
       }
       service_element[:executable] = executable if executable
       service_element[:arguments] = arguments unless arguments.empty?
@@ -136,11 +132,9 @@ module WinSW
       end
       custom_opts = custom.to_h.clone
       custom_opts[:logmode] = log_mode unless custom.key?(:log) || custom.key?(:logmode)
-      custom_opts[:logmode] = 'reset' if is_test
       custom_opts.each do |key, value|
         service_element[key] = value
       end
-      service_element[:logpath] = '%BASE%' if is_test
       extensions.each_with_index do |entry, index|
         service_element[:extensions] = {} unless service_element.key?(:extensions)
         service_element[:extensions]["extension$$__#{index}"] = entry

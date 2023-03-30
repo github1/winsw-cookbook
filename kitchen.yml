@@ -5,14 +5,19 @@ driver:
 provisioner:
   name: chef_zero
   chef_license: accept
-  log_level: <%= ENV['LOG_LEVEL'] || 'info' %>
+  max_retries: 3
+  wait_for_retry: 360
+  retry_on_exit_code:
+    - 35
+    - 20
 transport:
   connection_timeout: 10
   connection_retries: 5
 platforms:
   - name: windows-2019
-    driver:
-      require_chef_omnibus: '17.9.26'
+    provisioner:
+      product_name: chef
+      product_version: latest
 suites:
   - name: default
     run_list:

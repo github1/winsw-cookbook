@@ -1,3 +1,9 @@
+# 3.1.7
+
+- Symlink WinSW.exe instead of copying it
+- Ability to set `winsw_bin_url` to local file path
+- Remove test.exe
+
 # 3.1.6
 
 - Ensure test.exe.bat failures cause chef run to fail

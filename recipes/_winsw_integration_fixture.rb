@@ -1,7 +1,7 @@
 # workaround for https://github.com/test-kitchen/busser/issues/25
-# windows_package 'ruby' do
-#   source 'https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-2.4.9-1/rubyinstaller-devkit-2.4.9-1-x64.exe'
-# end
+windows_path 'C:\opscode\chef\embedded\bin' do
+  action :add
+end
 
 remote_file '/openjdk.zip' do
   source 'https://bitbucket.org/alexkasko/openjdk-unofficial-builds/downloads/openjdk-1.7.0-u60-unofficial-windows-i586-image.zip'
@@ -30,9 +30,22 @@ winsw 'my_service' do
   executable 'C:\\openjdk\\openjdk-1.7.0-u60-unofficial-windows-i586-image\\bin\\java'
   args %w( -Xrs -jar C:\\SimpleWebServer.jar )
   options :log => {
-      :@mode => 'reset'
+    :@mode => 'reset'
   },
-  :pidfile => '%BASE%\pid.txt',
-  :stopTimeout => 5000,
-  :stopParentProcessFirst => false
+          :pidfile => '%BASE%\pid.txt',
+          :stopTimeout => 5000,
+          :stopParentProcessFirst => false
+end
+
+winsw 'my_other_service' do
+  basedir 'C:/service'
+  executable 'C:\\openjdk\\openjdk-1.7.0-u60-unofficial-windows-i586-image\\bin\\java'
+  args %w( -Xrs -jar C:\\SimpleWebServer.jar )
+  options :log => {
+    :@mode => 'reset'
+  },
+          :pidfile => '%BASE%\pid.txt',
+          :stopTimeout => 5000,
+          :stopParentProcessFirst => false
+  enabled false
 end

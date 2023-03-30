@@ -21,10 +21,11 @@ describe 'winsw resource' do
           expect(chef_run).to create_remote_file('test_service download winsw')
         end
         it 'updates the winsw executable' do
-          expect(chef_run).to run_execute('test_service update executable')
-          expect(chef_run.execute('test_service update executable'))
+          puts chef_run
+          expect(chef_run).to create_link('\winsw\services\test_service\test_service.exe')
+          expect(chef_run.link('\winsw\services\test_service\test_service.exe'))
               .to notify('execute[test_service stop re-configured service]')
-                      .to(:run).immediately
+                      .to(:run).before
         end
         it 'renders the winsw config file' do
           expect(chef_run).to create_file('\\winsw\\services\\test_service\\test_service.xml')
@@ -42,25 +43,6 @@ describe 'winsw resource' do
           EOT
           expect(chef_run.file('\\winsw\\services\\test_service\\test_service.xml'))
               .to notify('execute[test_service restart re-configured service]')
-                      .to(:run).immediately
-        end
-        it 'renders a test version of the winsw config file' do
-          expect(chef_run).to create_file('\\winsw\\services\\test_service\\test\\test.xml')
-          expect(chef_run).to render_file('\\winsw\\services\\test_service\\test\\test.xml').with_content(<<-EOT.strip)
-<service>
- <id>test_service_test</id>
- <name>test_service_test</name>
- <description>test_service</description>
- <executable>whoami</executable>
- <arguments>arg0 arg1</arguments>
- <env name="env0" value="env0 val"/>
- <stopparentprocessfirst>true</stopparentprocessfirst>
- <logmode>reset</logmode>
- <logpath>%BASE%</logpath>
-</service>
-          EOT
-          expect(chef_run.file('\\winsw\\services\\test_service\\test\\\test.xml'))
-              .not_to notify('execute[test_service restart re-configured service]')
                       .to(:run).immediately
         end
         it 'is installed' do
@@ -153,9 +135,6 @@ describe 'winsw resource' do
         end
       end
       it 'can stop the disabled service on configuration changes' do
-        expect(chef_run.execute('test_service update executable'))
-            .to notify('execute[test_service stop re-configured service]')
-                        .to(:run).immediately
         expect(chef_run.file('\\winsw\\services\\test_service\\test_service.xml'))
             .not_to notify('execute[test_service restart re-configured service]')
                         .to(:run).immediately
